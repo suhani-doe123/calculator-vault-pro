@@ -49,13 +49,9 @@ calculator-vault/
 │   └── script.js
 │
 ├── android/
-│
-├── functions/
 │   ├── index.js
 │   └── package.json
-│
-├── capacitor.config.ts
+
 ├── firestore.rules
-├── storage.rules
 ├── firebase.json
 └── README.md
