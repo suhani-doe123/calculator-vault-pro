@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1.0">
+
+<title>Calculator Vault</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="calculator">
+
+    <h1>CALCULATOR</h1>
+
+    <div id="display">0</div>
+
+    <div class="keys">
+
+        <button data-action="clear">AC</button>
+        <button data-action="delete">⌫</button>
+        <button data-value="%">%</button>
+        <button class="op" data-value="/">÷</button>
+
+        <button data-value="7">7</button>
+        <button data-value="8">8</button>
+        <button data-value="9">9</button>
+        <button class="op" data-value="*">×</button>
+
+        <button data-value="4">4</button>
+        <button data-value="5">5</button>
+        <button data-value="6">6</button>
+        <button class="op" data-value="-">−</button>
+
+        <button data-value="1">1</button>
+        <button data-value="2">2</button>
+        <button data-value="3">3</button>
+        <button class="op" data-value="+">+</button>
+
+        <button data-value=".">.</button>
+        <button data-value="0">0</button>
+        <button data-action="sqrt">√</button>
+        <button class="equal" data-action="equal">=</button>
+
+    </div>
+
+</div>
+
+
+<div id="pinPage" class="hidden">
+
+    <div class="pinBox">
+
+        <div class="lock">🔐</div>
+
+        <h2>Private Vault</h2>
+
+        <p>Enter PIN</p>
+
+        <div id="dots">○ ○ ○ ○</div>
+
+        <div class="pinKeys">
+
+            <button data-pin="1">1</button>
+            <button data-pin="2">2</button>
+            <button data-pin="3">3</button>
+
+            <button data-pin="4">4</button>
+            <button data-pin="5">5</button>
+            <button data-pin="6">6</button>
+
+            <button data-pin="7">7</button>
+            <button data-pin="8">8</button>
+            <button data-pin="9">9</button>
+
+            <button data-pin="delete">⌫</button>
+            <button data-pin="0">0</button>
+            <button data-pin="enter">✓</button>
+
+        </div>
+
+        <p id="pinError"></p>
+
+    </div>
+
+</div>
+
+
+<div id="vaultPage" class="hidden">
+
+    <div class="vault">
+
+        <header>
+
+            <div>
+                <h2>🔐 My Vault</h2>
+                <small id="accountEmail"></small>
+            </div>
+
+            <button id="lockBtn">🔒</button>
+
+        </header>
+
+
+        <section class="card">
+
+            <div class="account">
+
+                <div class="google">G</div>
+
+                <div>
+                    <b id="accountName">Guest</b>
+                    <small id="accountStatus">
+                        Not connected
+                    </small>
+                </div>
+
+                <button id="loginBtn">
+                    Google Login
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <section class="card">
+
+            <div class="storageHeader">
+
+                <b>Cloud Storage</b>
+
+                <b id="percent">0%</b>
+
+            </div>
+
+            <div class="progress">
+
+                <div id="progressBar"></div>
+
+            </div>
+
+            <div class="storageNumbers">
+
+                <span id="used">
+                    Used: 0 GB
+                </span>
+
+                <span id="available">
+                    Available: 1 GB
+                </span>
+
+            </div>
+
+            <div id="plan">
+                FREE PLAN • 1 GB
+            </div>
+
+        </section>
+
+
+        <section class="premiumCard">
+
+            <div>
+
+                <b>⭐ Premium Vault</b>
+
+                <small>
+                    Upgrade to 10 GB cloud storage
+                </small>
+
+                <strong>
+                    $15 / month
+                </strong>
+
+            </div>
+
+            <button id="upgradeBtn">
+                UPGRADE
+            </button>
+
+        </section>
+
+
+        <section class="uploadArea">
+
+            <label>
+
+                🖼️ Photos
+
+                <input
+                    id="photoInput"
+                    type="file"
+                    accept="image/*"
+                    multiple>
+
+            </label>
+
+
+            <label>
+
+                🎥 Videos
+
+                <input
+                    id="videoInput"
+                    type="file"
+                    accept="video/*"
+                    multiple>
+
+            </label>
+
+        </section>
+
+
+        <div class="counts">
+
+            <span id="photoCount">
+                Photos: 0
+            </span>
+
+            <span id="videoCount">
+                Videos: 0
+            </span>
+
+        </div>
+
+
+        <div id="gallery"></div>
+
+
+        <button id="logoutBtn"
+                class="logout">
+            Sign Out
+        </button>
+
+    </div>
+
+</div>
+
+
+<div id="upgradeModal" class="modal hidden">
+
+    <div class="modalBox">
+
+        <button id="closeModal">✕</button>
+
+        <div class="star">⭐</div>
+
+        <h2>Premium Vault</h2>
+
+        <div class="price">
+            $15
+            <small>/month</small>
+        </div>
+
+        <p>Get 10 GB secure storage</p>
+
+        <ul>
+            <li>✓ 10 GB cloud storage</li>
+            <li>✓ Photo backup</li>
+            <li>✓ Video backup</li>
+            <li>✓ Private vault</li>
+            <li>✓ Automatic subscription</li>
+        </ul>
+
+        <button id="subscribeBtn">
+            Subscribe — $15/month
+        </button>
+
+    </div>
+
+</div>
+
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>

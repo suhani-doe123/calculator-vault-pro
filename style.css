@@ -1,0 +1,464 @@
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    background:#070b12;
+    color:white;
+    font-family:Arial,sans-serif;
+}
+
+button,
+label{
+    cursor:pointer;
+}
+
+button:active,
+label:active{
+    transform:scale(.96);
+}
+
+.hidden{
+    display:none!important;
+}
+
+
+/* CALCULATOR */
+
+#calculator{
+    max-width:430px;
+    margin:auto;
+    padding:18px;
+}
+
+h1{
+    text-align:center;
+    letter-spacing:4px;
+    font-size:20px;
+    margin:20px 0;
+}
+
+#display{
+    height:140px;
+    border-radius:25px;
+    background:#111a27;
+    border:1px solid #29394d;
+    display:flex;
+    justify-content:flex-end;
+    align-items:flex-end;
+    padding:20px;
+    font-size:40px;
+    overflow:hidden;
+}
+
+.keys{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.keys button{
+    height:65px;
+    border:0;
+    border-radius:18px;
+    background:#192536;
+    color:white;
+    font-size:21px;
+    font-weight:bold;
+}
+
+.keys .op{
+    background:#12385b;
+    color:#62caff;
+}
+
+.keys .equal{
+    background:linear-gradient(135deg,#167cff,#823dff);
+}
+
+
+/* PIN */
+
+#pinPage{
+    min-height:100vh;
+    padding:40px 18px;
+}
+
+.pinBox{
+    max-width:380px;
+    margin:auto;
+    padding:25px;
+    border-radius:25px;
+    background:#111a27;
+    border:1px solid #29394d;
+    text-align:center;
+}
+
+.lock{
+    font-size:55px;
+}
+
+.pinBox h2{
+    margin:10px;
+}
+
+.pinBox p{
+    color:#78879a;
+}
+
+#dots{
+    margin:25px;
+    color:#63caff;
+    font-size:25px;
+    letter-spacing:5px;
+}
+
+.pinKeys{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+}
+
+.pinKeys button{
+    height:58px;
+    border:0;
+    border-radius:15px;
+    background:#192536;
+    color:white;
+    font-size:20px;
+}
+
+#pinError{
+    color:#ff6565;
+    height:25px;
+}
+
+
+/* VAULT */
+
+#vaultPage{
+    min-height:100vh;
+}
+
+.vault{
+    max-width:470px;
+    margin:auto;
+    padding:18px;
+}
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+header h2{
+    font-size:23px;
+}
+
+header small{
+    color:#738196;
+}
+
+header button{
+    width:46px;
+    height:46px;
+    border:0;
+    border-radius:14px;
+    background:#192536;
+    color:white;
+}
+
+.card{
+    background:#111a27;
+    border:1px solid #29394d;
+    border-radius:20px;
+    padding:17px;
+    margin-bottom:15px;
+}
+
+.account{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.google{
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:white;
+    color:#4285f4;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    font-size:22px;
+}
+
+.account>div:nth-child(2){
+    flex:1;
+}
+
+.account small{
+    display:block;
+    color:#718096;
+    font-size:11px;
+    margin-top:4px;
+}
+
+#loginBtn{
+    border:0;
+    border-radius:12px;
+    padding:10px;
+    background:#173d63;
+    color:#66cbff;
+    font-weight:bold;
+}
+
+
+/* STORAGE */
+
+.storageHeader,
+.storageNumbers{
+    display:flex;
+    justify-content:space-between;
+}
+
+#percent{
+    color:#63caff;
+}
+
+.progress{
+    height:10px;
+    background:#273345;
+    border-radius:20px;
+    overflow:hidden;
+    margin:14px 0;
+}
+
+#progressBar{
+    height:100%;
+    width:0;
+    background:linear-gradient(90deg,#147fff,#823dff);
+    transition:.3s;
+}
+
+.storageNumbers{
+    color:#8290a4;
+    font-size:11px;
+}
+
+#plan{
+    margin-top:10px;
+    color:#6f7e92;
+    font-size:11px;
+}
+
+
+/* PREMIUM */
+
+.premiumCard{
+    padding:17px;
+    border-radius:20px;
+    margin-bottom:15px;
+    background:linear-gradient(135deg,#291e40,#121a29);
+    border:1px solid #493673;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.premiumCard>div{
+    flex:1;
+}
+
+.premiumCard b,
+.premiumCard small,
+.premiumCard strong{
+    display:block;
+}
+
+.premiumCard small{
+    color:#8491a4;
+    margin:5px 0;
+    font-size:11px;
+}
+
+.premiumCard strong{
+    color:#d6c4ff;
+    font-size:13px;
+}
+
+#upgradeBtn{
+    border:0;
+    border-radius:12px;
+    padding:11px;
+    background:#7b3fff;
+    color:white;
+    font-weight:bold;
+}
+
+
+/* UPLOAD */
+
+.uploadArea{
+    display:flex;
+    gap:10px;
+}
+
+.uploadArea label{
+    flex:1;
+    height:52px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.uploadArea label:first-child{
+    background:#197cff;
+}
+
+.uploadArea label:last-child{
+    background:#843fff;
+}
+
+.uploadArea input{
+    display:none;
+}
+
+.counts{
+    display:flex;
+    justify-content:space-between;
+    color:#718096;
+    font-size:12px;
+    margin:13px 2px;
+}
+
+
+/* GALLERY */
+
+#gallery{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+}
+
+.file{
+    aspect-ratio:1;
+    overflow:hidden;
+    border-radius:13px;
+    background:#151f2d;
+}
+
+.file img,
+.file video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.empty{
+    grid-column:1/-1;
+    text-align:center;
+    padding:50px 0;
+    color:#637186;
+}
+
+.logout{
+    width:100%;
+    height:48px;
+    margin-top:20px;
+    border:0;
+    border-radius:14px;
+    background:#321a1e;
+    color:#ff7474;
+    font-weight:bold;
+}
+
+
+/* MODAL */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.9);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10;
+}
+
+.modalBox{
+    width:100%;
+    max-width:390px;
+    background:#111a27;
+    border:1px solid #29394d;
+    border-radius:25px;
+    padding:25px;
+    position:relative;
+}
+
+#closeModal{
+    position:absolute;
+    right:15px;
+    top:15px;
+    width:38px;
+    height:38px;
+    border:0;
+    border-radius:12px;
+    background:#202c3c;
+    color:white;
+}
+
+.star{
+    text-align:center;
+    font-size:55px;
+}
+
+.modalBox h2{
+    text-align:center;
+    margin:10px;
+}
+
+.price{
+    text-align:center;
+    font-size:45px;
+    font-weight:bold;
+    margin:20px;
+}
+
+.price small{
+    font-size:14px;
+    color:#8190a4;
+}
+
+.modalBox>p{
+    text-align:center;
+    color:#8190a4;
+}
+
+.modalBox li{
+    list-style:none;
+    padding:10px 0;
+    border-bottom:1px solid #263243;
+}
+
+#subscribeBtn{
+    width:100%;
+    height:52px;
+    margin-top:20px;
+    border:0;
+    border-radius:15px;
+    background:linear-gradient(135deg,#783fff,#a635d2);
+    color:white;
+    font-weight:bold;
+}
