@@ -1,1447 +1,554 @@
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-
-import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-
-import {
-    getFirestore,
-    collection,
-    addDoc,
-    deleteDoc,
-    doc,
-    getDocs,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
-import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL,
-    deleteObject
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
-
-
 /* =====================================================
-   YOUR FIREBASE PROJECT
+   STORAGE LIMITS & STATE
 ===================================================== */
-
-const firebaseConfig = {
-
-    apiKey:
-        "AIzaSyDBwMpqtx6bP452hoI1wbqWsTOzY83MTVM",
-
-    authDomain:
-        "sign-up-my.firebaseapp.com",
-
-    projectId:
-        "sign-up-my",
-
-    storageBucket:
-        "sign-up-my.firebasestorage.app",
-
-    messagingSenderId:
-        "430033722756",
-
-    appId:
-        "1:430033722756:web:3033ccae1c2113bbc6d1d1",
-
-    measurementId:
-        "G-FZM7MHT4BN"
-};
-
-
-/* =====================================================
-   FIREBASE
-===================================================== */
-
-const app =
-    initializeApp(firebaseConfig);
-
-const auth =
-    getAuth(app);
-
-const db =
-    getFirestore(app);
-
-const storage =
-    getStorage(app);
-
-const provider =
-    new GoogleAuthProvider();
-
-
-/* =====================================================
-   STORAGE LIMITS
-===================================================== */
-
-const FREE_LIMIT =
-    1024 * 1024 * 1024;
-
-const PREMIUM_LIMIT =
-    10 * 1024 * 1024 * 1024;
-
-
-/* =====================================================
-   VARIABLES
-===================================================== */
-
-let currentUser = null;
+const FREE_LIMIT = 1024 * 1024 * 1024; // 1 GB
+const PREMIUM_LIMIT = 10 * 1024 * 1024 * 1024; // 10 GB
+const SECRET_CODE = "2580";
 
 let isPremium = false;
-
-let vaultFiles = [];
-
+let localFiles = [];
 let calculatorExpression = "";
-
 let enteredPin = "";
-
-
-/*
-   Hidden calculator code.
-*/
-const HIDDEN_CODE = "2580";
-
-/*
-   Vault PIN.
-   Change this before publishing.
-*/
-const VAULT_PIN = "2580";
-
+let userPin = localStorage.getItem("vault_pin") || "2580";
+let pinMode = "normal";
+let newPin = "";
+let currentFilter = "all"; // State for Filter: "all", "photo", "video"
 
 /* =====================================================
-   ELEMENTS
+   INDEXEDDB STORAGE ENGINE
 ===================================================== */
-
-const display =
-    document.getElementById("display");
-
-const calculator =
-    document.getElementById("calculator");
-
-const pinPage =
-    document.getElementById("pinPage");
-
-const vaultPage =
-    document.getElementById("vaultPage");
-
-
-/* =====================================================
-   CALCULATOR
-===================================================== */
-
-document
-    .querySelectorAll(".keys button")
-    .forEach(button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                const value =
-                    button.dataset.value;
-
-                const action =
-                    button.dataset.action;
-
-
-                if (value) {
-
-                    addCalculatorValue(
-                        value
-                    );
-
-                    return;
-
-                }
-
-
-                if (action === "clear") {
-
-                    calculatorExpression =
-                        "";
-
-                    display.textContent =
-                        "0";
-
-                }
-
-
-                if (action === "delete") {
-
-                    calculatorExpression =
-                        calculatorExpression
-                            .slice(0, -1);
-
-                    display.textContent =
-                        calculatorExpression ||
-                        "0";
-
-                }
-
-
-                if (action === "sqrt") {
-
-                    calculateSquareRoot();
-
-                }
-
-
-                if (action === "equal") {
-
-                    calculate();
-
-                }
-
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open("VaultStorageDB", 1);
+        request.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains("files")) {
+                db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
             }
-        );
+        };
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = e => reject(e.target.error);
+    });
+}
 
+async function saveLocalFileDB(fileObj) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        const req = store.add(fileObj);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function getLocalFilesDB() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction("files", "readonly");
+        const store = tx.objectStore("files");
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function deleteLocalFileDB(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+    });
+}
+
+/* =====================================================
+   INITIALIZE APPLICATION
+===================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+    localStorage.removeItem("is_premium");
+
+    setupCalculatorEvents();
+    setupPinEvents();
+    setupVaultEvents();
+    setupFilterEvents();
+
+    try {
+        localFiles = await getLocalFilesDB();
+    } catch (err) {
+        console.error("IndexedDB Error:", err);
+        localFiles = [];
+    }
+
+    renderFiles();
+    updateStorage();
+});
+
+/* =====================================================
+   CALCULATOR ENGINE
+===================================================== */
+function setupCalculatorEvents() {
+    const display = document.getElementById("display");
+
+    document.querySelectorAll(".keys button").forEach(button => {
+        button.addEventListener("click", () => {
+            const value = button.dataset.value;
+            const action = button.dataset.action;
+
+            if (!display) return;
+            if (display.textContent === "Error") calculatorExpression = "";
+
+            if (value !== undefined) {
+                calculatorExpression += value;
+                display.textContent = calculatorExpression;
+                return;
+            }
+
+            if (action === "clear") {
+                calculatorExpression = "";
+                display.textContent = "0";
+                return;
+            }
+
+            if (action === "delete") {
+                calculatorExpression = calculatorExpression.slice(0, -1);
+                display.textContent = calculatorExpression || "0";
+                return;
+            }
+
+            if (action === "sqrt") {
+                try {
+                    const val = safeCalculate(calculatorExpression || "0");
+                    if (val < 0) throw new Error("Math Error");
+                    calculatorExpression = String(Math.sqrt(val));
+                    display.textContent = calculatorExpression;
+                } catch {
+                    display.textContent = "Error";
+                    calculatorExpression = "";
+                }
+                return;
+            }
+
+            if (action === "equal") {
+                if (calculatorExpression === SECRET_CODE) {
+                    calculatorExpression = "";
+                    display.textContent = "0";
+                    openPin();
+                    return;
+                }
+
+                try {
+                    const result = safeCalculate(calculatorExpression);
+                    if (isNaN(result) || !isFinite(result)) throw new Error("Error");
+                    calculatorExpression = String(Number(result.toFixed(8)));
+                    display.textContent = calculatorExpression;
+                } catch {
+                    display.textContent = "Error";
+                    calculatorExpression = "";
+                }
+            }
+        });
+    });
+}
+
+function safeCalculate(exp) {
+    if (!exp) return 0;
+    let sanitized = exp
+        .replace(/÷/g, "/")
+        .replace(/×/g, "*")
+        .replace(/−/g, "-");
+
+    sanitized = sanitized.replace(/([0-9.]+)%/g, "($1/100)");
+
+    if (/[^0-9+\-*/().%\s]/.test(sanitized)) {
+        throw new Error("Invalid Input");
+    }
+
+    return Function(`"use strict"; return (${sanitized})`)();
+}
+
+/* =====================================================
+   PIN CONTROLLER
+===================================================== */
+function setupPinEvents() {
+    document.querySelectorAll("[data-pin]").forEach(button => {
+        button.addEventListener("click", () => {
+            const value = button.dataset.pin;
+
+            if (value === "delete") {
+                enteredPin = enteredPin.slice(0, -1);
+                updatePinDots();
+                return;
+            }
+
+            if (value === "enter") {
+                checkPin();
+                return;
+            }
+
+            if (enteredPin.length < 4) {
+                enteredPin += value;
+                updatePinDots();
+            }
+
+            if (enteredPin.length === 4) {
+                setTimeout(checkPin, 150);
+            }
+        });
     });
 
-
-function addCalculatorValue(value) {
-
-    calculatorExpression += value;
-
-    display.textContent =
-        calculatorExpression;
-
+    document.getElementById("forgotPinBtn")?.addEventListener("click", () => {
+        alert("Please subscribe to use the PIN recovery feature.");
+        window.location.href = "https://accounts.google.com";
+    });
 }
-
-
-function calculateSquareRoot() {
-
-    if (!calculatorExpression)
-        return;
-
-
-    try {
-
-        const value =
-            safeCalculate(
-                calculatorExpression
-            );
-
-        if (value < 0)
-            throw new Error();
-
-        calculatorExpression =
-            String(
-                Math.sqrt(value)
-            );
-
-        display.textContent =
-            calculatorExpression;
-
-    }
-    catch {
-
-        calculatorError();
-
-    }
-
-}
-
-
-function calculate() {
-
-    if (!calculatorExpression)
-        return;
-
-
-    /*
-       Hidden Vault access.
-
-       Enter 2580 and press =
-    */
-
-    if (
-        calculatorExpression ===
-        HIDDEN_CODE
-    ) {
-
-        calculatorExpression =
-            "";
-
-        display.textContent =
-            "0";
-
-        openPin();
-
-        return;
-
-    }
-
-
-    try {
-
-        const result =
-            safeCalculate(
-                calculatorExpression
-            );
-
-
-        calculatorExpression =
-            String(
-                Number(
-                    result.toFixed(10)
-                )
-            );
-
-
-        display.textContent =
-            calculatorExpression;
-
-    }
-    catch {
-
-        calculatorError();
-
-    }
-
-}
-
-
-function safeCalculate(expression) {
-
-    /*
-       Allow only calculator characters.
-    */
-
-    if (
-        !/^[0-9+\-*/().%\s]+$/
-            .test(expression)
-    ) {
-
-        throw new Error(
-            "Invalid expression"
-        );
-
-    }
-
-
-    const converted =
-        expression.replace(
-            /([0-9.]+)%/g,
-            "($1/100)"
-        );
-
-
-    const result =
-        Function(
-            `"use strict";
-             return (${converted})`
-        )();
-
-
-    if (
-        typeof result !== "number" ||
-        !Number.isFinite(result)
-    ) {
-
-        throw new Error(
-            "Invalid result"
-        );
-
-    }
-
-
-    return result;
-
-}
-
-
-function calculatorError() {
-
-    calculatorExpression =
-        "";
-
-    display.textContent =
-        "Error";
-
-}
-
-
-/* =====================================================
-   PIN
-===================================================== */
 
 function openPin() {
-
-    calculator.classList.add(
-        "hidden"
-    );
-
-    pinPage.classList.remove(
-        "hidden"
-    );
-
+    document.getElementById("calculator")?.classList.add("hidden");
+    document.getElementById("vaultPage")?.classList.add("hidden");
+    document.getElementById("pinPage")?.classList.remove("hidden");
     enteredPin = "";
+    newPin = "";
+    pinMode = "normal";
+
+    const heading = document.getElementById("pinSubHeading");
+    if (heading) heading.textContent = "Enter PIN";
+
+    const error = document.getElementById("pinError");
+    if (error) error.textContent = "";
 
     updatePinDots();
-
-    document.getElementById(
-        "pinError"
-    ).textContent = "";
-
 }
-
-
-document
-    .querySelectorAll("[data-pin]")
-    .forEach(button => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                const value =
-                    button.dataset.pin;
-
-
-                if (
-                    value === "delete"
-                ) {
-
-                    enteredPin =
-                        enteredPin.slice(
-                            0,
-                            -1
-                        );
-
-                    updatePinDots();
-
-                    return;
-
-                }
-
-
-                if (
-                    value === "enter"
-                ) {
-
-                    checkPin();
-
-                    return;
-
-                }
-
-
-                if (
-                    enteredPin.length >= 4
-                )
-                    return;
-
-
-                enteredPin += value;
-
-                updatePinDots();
-
-
-                if (
-                    enteredPin.length === 4
-                ) {
-
-                    setTimeout(
-                        checkPin,
-                        150
-                    );
-
-                }
-
-            }
-        );
-
-    });
-
 
 function updatePinDots() {
-
     let dots = "";
-
-    for (
-        let i = 0;
-        i < 4;
-        i++
-    ) {
-
-        dots +=
-            i < enteredPin.length
-                ? "● "
-                : "○ ";
-
+    for (let i = 0; i < 4; i++) {
+        dots += i < enteredPin.length ? "● " : "○ ";
     }
-
-    document.getElementById(
-        "dots"
-    ).textContent = dots;
-
+    const dotsElement = document.getElementById("dots");
+    if (dotsElement) dotsElement.textContent = dots;
 }
 
+function pinError(message) {
+    const error = document.getElementById("pinError");
+    if (error) error.textContent = message;
+    enteredPin = "";
+    updatePinDots();
+}
 
 function checkPin() {
+    const error = document.getElementById("pinError");
 
-    if (
-        enteredPin ===
-        VAULT_PIN
-    ) {
-
-        pinPage.classList.add(
-            "hidden"
-        );
-
-        vaultPage.classList.remove(
-            "hidden"
-        );
-
-        document.getElementById(
-            "pinError"
-        ).textContent = "";
-
-        loadFiles();
-
-    }
-    else {
-
-        document.getElementById(
-            "pinError"
-        ).textContent =
-            "Incorrect PIN";
-
-        enteredPin = "";
-
-        updatePinDots();
-
-    }
-
-}
-
-
-/* =====================================================
-   BACK TO CALCULATOR
-===================================================== */
-
-document.getElementById(
-    "backCalculator"
-).addEventListener(
-    "click",
-    () => {
-
-        pinPage.classList.add(
-            "hidden"
-        );
-
-        calculator.classList.remove(
-            "hidden"
-        );
-
-        enteredPin = "";
-
-    }
-);
-
-
-/* =====================================================
-   GOOGLE LOGIN
-===================================================== */
-
-document.getElementById(
-    "loginBtn"
-).addEventListener(
-    "click",
-    async () => {
-
-        try {
-
-            await signInWithPopup(
-                auth,
-                provider
-            );
-
-        }
-        catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Google Login failed:\n\n" +
-                error.message
-            );
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   AUTH STATE
-===================================================== */
-
-onAuthStateChanged(
-    auth,
-    async user => {
-
-        currentUser = user;
-
-
-        if (!user) {
-
-            isPremium = false;
-
-            vaultFiles = [];
-
-            document.getElementById(
-                "accountName"
-            ).textContent =
-                "Guest";
-
-            document.getElementById(
-                "accountEmail"
-            ).textContent =
-                "Not signed in";
-
-            document.getElementById(
-                "accountStatus"
-            ).textContent =
-                "Sign in to backup files";
-
-            document.getElementById(
-                "loginBtn"
-            ).textContent =
-                "Google";
-
-            document.getElementById(
-                "avatar"
-            ).textContent =
-                "G";
-
-            updateStorage();
-
-            renderFiles();
-
+    if (pinMode === "normal") {
+        if (enteredPin.length !== 4) {
+            pinError("PIN must be 4 digits");
             return;
-
         }
 
-
-        document.getElementById(
-            "accountName"
-        ).textContent =
-            user.displayName ||
-            "Google User";
-
-
-        document.getElementById(
-            "accountEmail"
-        ).textContent =
-            user.email ||
-            "";
-
-
-        document.getElementById(
-            "accountStatus"
-        ).textContent =
-            "Checking account...";
-
-
-        const avatar =
-            document.getElementById(
-                "avatar"
-            );
-
-
-        if (user.photoURL) {
-
-            avatar.innerHTML =
-                `<img src="${user.photoURL}" alt="">`;
-
+        if (enteredPin === userPin) {
+            document.getElementById("pinPage")?.classList.add("hidden");
+            document.getElementById("vaultPage")?.classList.remove("hidden");
+            if (error) error.textContent = "";
+            enteredPin = "";
+            updatePinDots();
+            loadFiles();
+        } else {
+            pinError("Incorrect PIN");
         }
-        else {
-
-            avatar.textContent =
-                (
-                    user.displayName ||
-                    "G"
-                )
-                .charAt(0)
-                .toUpperCase();
-
-        }
-
-
-        document.getElementById(
-            "loginBtn"
-        ).textContent =
-            "Connected";
-
-
-        /*
-           Read Firebase custom claim.
-
-           Your Cloud Function will eventually
-           set:
-
-           premium: true
-        */
-
-        try {
-
-            const tokenResult =
-                await user.getIdTokenResult(
-                    true
-                );
-
-            isPremium =
-                tokenResult.claims
-                    .premium === true;
-
-        }
-        catch {
-
-            isPremium = false;
-
-        }
-
-
-        document.getElementById(
-            "accountStatus"
-        ).textContent =
-            isPremium
-                ? "⭐ Premium Active"
-                : "Free Account";
-
-
-        await loadFiles();
-
+        return;
     }
-);
 
+    if (pinMode === "change-old") {
+        if (enteredPin.length !== 4) {
+            pinError("Please enter your current PIN");
+            return;
+        }
+
+        if (enteredPin !== userPin) {
+            pinError("Incorrect current PIN");
+            return;
+        }
+
+        enteredPin = "";
+        pinMode = "change-new";
+        if (error) error.textContent = "";
+        const heading = document.getElementById("pinSubHeading");
+        if (heading) heading.textContent = "Enter New 4-Digit PIN";
+        updatePinDots();
+        return;
+    }
+
+    if (pinMode === "change-new") {
+        if (enteredPin.length !== 4) {
+            pinError("New PIN must be 4 digits");
+            return;
+        }
+        newPin = enteredPin;
+        enteredPin = "";
+        pinMode = "change-confirm";
+        if (error) error.textContent = "";
+        const heading = document.getElementById("pinSubHeading");
+        if (heading) heading.textContent = "Confirm New 4-Digit PIN";
+        updatePinDots();
+        return;
+    }
+
+    if (pinMode === "change-confirm") {
+        if (enteredPin.length !== 4) {
+            pinError("Please confirm your new PIN");
+            return;
+        }
+
+        if (enteredPin !== newPin) {
+            pinError("PINs do not match");
+            newPin = "";
+            pinMode = "change-new";
+            const heading = document.getElementById("pinSubHeading");
+            if (heading) heading.textContent = "Enter New 4-Digit PIN";
+            return;
+        }
+
+        userPin = newPin;
+        localStorage.setItem("vault_pin", userPin);
+        enteredPin = "";
+        newPin = "";
+        pinMode = "normal";
+        updatePinDots();
+        if (error) error.textContent = "";
+        alert("Your PIN has been changed successfully!");
+
+        document.getElementById("pinPage")?.classList.add("hidden");
+        document.getElementById("vaultPage")?.classList.remove("hidden");
+        return;
+    }
+}
 
 /* =====================================================
-   STORAGE
+   VAULT CONTROLLER
 ===================================================== */
+function setupVaultEvents() {
+    document.getElementById("photoInput")?.addEventListener("change", handleUpload);
+    document.getElementById("videoInput")?.addEventListener("change", handleUpload);
 
-function getStorageLimit() {
+    document.getElementById("upgradeBtn")?.addEventListener("click", () => {
+        document.getElementById("upgradeModal")?.classList.remove("hidden");
+    });
 
-    return isPremium
-        ? PREMIUM_LIMIT
-        : FREE_LIMIT;
+    document.getElementById("closeModal")?.addEventListener("click", () => {
+        document.getElementById("upgradeModal")?.classList.add("hidden");
+    });
 
+    document.getElementById("subscribeBtn")?.addEventListener("click", () => {
+        document.getElementById("upgradeModal")?.classList.add("hidden");
+        window.location.href = "https://accounts.google.com";
+    });
+
+    document.getElementById("lockBtn")?.addEventListener("click", () => {
+        document.getElementById("vaultPage")?.classList.add("hidden");
+        document.getElementById("calculator")?.classList.remove("hidden");
+    });
+
+    document.getElementById("changePinBtn")?.addEventListener("click", () => {
+        pinMode = "change-old";
+        enteredPin = "";
+        newPin = "";
+        document.getElementById("vaultPage")?.classList.add("hidden");
+        document.getElementById("pinPage")?.classList.remove("hidden");
+        const heading = document.getElementById("pinSubHeading");
+        if (heading) heading.textContent = "Enter Current PIN";
+        const error = document.getElementById("pinError");
+        if (error) error.textContent = "";
+        updatePinDots();
+    });
 }
 
+// FILTER SYSTEM Setup (ALL / PHOTOS / VIDEOS)
+function setupFilterEvents() {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentFilter = btn.dataset.filter;
+            renderFiles();
+        });
+    });
+}
 
+/* =====================================================
+   STORAGE MANAGEMENT
+===================================================== */
 function getUsedBytes() {
-
-    return vaultFiles.reduce(
-        (total, file) => {
-
-            return total +
-                Number(
-                    file.size || 0
-                );
-
-        },
-        0
-    );
-
+    return localFiles.reduce((total, file) => total + Number(file.size || 0), 0);
 }
-
 
 function updateStorage() {
+    const used = getUsedBytes();
+    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
+    const percentage = Math.min(100, (used / limit) * 100);
 
-    const used =
-        getUsedBytes();
+    const usedElement = document.getElementById("used");
+    if (usedElement) usedElement.textContent = "Used: " + (used / (1024 * 1024)).toFixed(1) + " MB";
 
-    const limit =
-        getStorageLimit();
+    const available = document.getElementById("available");
+    if (available) available.textContent = "Available: " + ((limit - used) / (1024 * 1024 * 1024)).toFixed(2) + " GB";
 
-    const available =
-        Math.max(
-            0,
-            limit - used
-        );
+    const percent = document.getElementById("percent");
+    if (percent) percent.textContent = percentage.toFixed(1) + "%";
 
-
-    const percentage =
-        limit === 0
-            ? 0
-            : Math.min(
-                100,
-                (
-                    used / limit
-                ) * 100
-            );
-
-
-    document.getElementById(
-        "used"
-    ).textContent =
-        "Used: " +
-        formatBytes(used);
-
-
-    document.getElementById(
-        "available"
-    ).textContent =
-        "Available: " +
-        formatBytes(available);
-
-
-    document.getElementById(
-        "percent"
-    ).textContent =
-        percentage.toFixed(1) +
-        "%";
-
-
-    document.getElementById(
-        "progressBar"
-    ).style.width =
-        percentage + "%";
-
-
-    document.getElementById(
-        "planBadge"
-    ).textContent =
-        isPremium
-            ? "⭐ PREMIUM PLAN • 10 GB"
-            : "FREE PLAN • 1 GB";
-
+    const progress = document.getElementById("progressBar");
+    if (progress) progress.style.width = percentage + "%";
 }
-
-
-function formatBytes(bytes) {
-
-    if (bytes < 1024 * 1024) {
-
-        return (
-            bytes / 1024
-        ).toFixed(1) +
-        " KB";
-
-    }
-
-
-    if (
-        bytes <
-        1024 * 1024 * 1024
-    ) {
-
-        return (
-            bytes /
-            (1024 * 1024)
-        ).toFixed(1) +
-        " MB";
-
-    }
-
-
-    return (
-        bytes /
-        (1024 * 1024 * 1024)
-    ).toFixed(2) +
-    " GB";
-
-}
-
 
 /* =====================================================
-   LOAD FIREBASE FILES
+   FILE UPLOADER & RENDER WITH FILTER & PREVIEW
 ===================================================== */
+async function handleUpload(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
+    const currentUsed = getUsedBytes();
+    let selectedSize = files.reduce((sum, f) => sum + f.size, 0);
+
+    if (currentUsed + selectedSize > limit) {
+        alert(isPremium ? "Storage limit of 10 GB has been reached." : "Storage limit of 1 GB has been reached.");
+        e.target.value = "";
+        return;
+    }
+
+    for (const file of files) {
+        try {
+            const fileObj = {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                blob: file
+            };
+            await saveLocalFileDB(fileObj);
+        } catch (err) {
+            console.error("Upload error:", err);
+        }
+    }
+
+    e.target.value = "";
+    await loadFiles();
+}
 
 async function loadFiles() {
-
-    if (!currentUser)
-        return;
-
-
     try {
-
-        const snapshot =
-            await getDocs(
-                collection(
-                    db,
-                    "users",
-                    currentUser.uid,
-                    "files"
-                )
-            );
-
-
-        vaultFiles =
-            snapshot.docs.map(
-                item => ({
-                    id: item.id,
-                    ...item.data()
-                })
-            );
-
-
-        renderFiles();
-
-        updateStorage();
-
+        localFiles = await getLocalFilesDB();
+    } catch (err) {
+        console.error("Error loading files:", err);
     }
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Unable to load vault files.\n\n" +
-            error.message
-        );
-
-    }
-
+    renderFiles();
+    updateStorage();
 }
-
-
-/* =====================================================
-   PHOTO UPLOAD
-===================================================== */
-
-document.getElementById(
-    "photoInput"
-).addEventListener(
-    "change",
-    event => {
-
-        const selected =
-            Array.from(
-                event.target.files
-            );
-
-        uploadFiles(selected);
-
-        event.target.value = "";
-
-    }
-);
-
-
-/* =====================================================
-   VIDEO UPLOAD
-===================================================== */
-
-document.getElementById(
-    "videoInput"
-).addEventListener(
-    "change",
-    event => {
-
-        const selected =
-            Array.from(
-                event.target.files
-            );
-
-        uploadFiles(selected);
-
-        event.target.value = "";
-
-    }
-);
-
-
-/* =====================================================
-   UPLOAD FILES
-===================================================== */
-
-async function uploadFiles(
-    selectedFiles
-) {
-
-    if (!currentUser) {
-
-        alert(
-            "Please sign in with Google first."
-        );
-
-        return;
-
-    }
-
-
-    if (!selectedFiles.length)
-        return;
-
-
-    const used =
-        getUsedBytes();
-
-
-    const incoming =
-        selectedFiles.reduce(
-            (total, file) =>
-                total + file.size,
-            0
-        );
-
-
-    const limit =
-        getStorageLimit();
-
-
-    if (
-        used + incoming >
-        limit
-    ) {
-
-        if (!isPremium) {
-
-            alert(
-                "Your free 1 GB storage is full.\n\n" +
-                "Upgrade to Premium for 10 GB."
-            );
-
-            openUpgrade();
-
-        }
-        else {
-
-            alert(
-                "Your Premium 10 GB storage is full."
-            );
-
-        }
-
-        return;
-
-    }
-
-
-    try {
-
-        for (
-            const file of selectedFiles
-        ) {
-
-            await uploadOne(file);
-
-        }
-
-
-        await loadFiles();
-
-        alert(
-            "Upload completed."
-        );
-
-    }
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Upload failed:\n\n" +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   UPLOAD ONE FILE
-===================================================== */
-
-async function uploadOne(file) {
-
-    const uniqueName =
-        Date.now() +
-        "_" +
-        crypto.randomUUID() +
-        "_" +
-        file.name;
-
-
-    const path =
-        "users/" +
-        currentUser.uid +
-        "/vault/" +
-        uniqueName;
-
-
-    const storageRef =
-        ref(
-            storage,
-            path
-        );
-
-
-    await uploadBytes(
-        storageRef,
-        file
-    );
-
-
-    const url =
-        await getDownloadURL(
-            storageRef
-        );
-
-
-    await addDoc(
-        collection(
-            db,
-            "users",
-            currentUser.uid,
-            "files"
-        ),
-        {
-
-            name:
-                file.name,
-
-            size:
-                file.size,
-
-            type:
-                file.type,
-
-            path:
-                path,
-
-            url:
-                url,
-
-            created:
-                serverTimestamp()
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   RENDER FILES
-===================================================== */
 
 function renderFiles() {
-
-    const gallery =
-        document.getElementById(
-            "gallery"
-        );
-
+    const gallery = document.getElementById("gallery");
+    if (!gallery) return;
 
     gallery.innerHTML = "";
-
-
-    let photos = 0;
-
-    let videos = 0;
-
-
-    vaultFiles.forEach(
-        file => {
-
-            const box =
-                document.createElement(
-                    "div"
-                );
-
-            box.className =
-                "file";
-
-
-            if (
-                file.type &&
-                file.type.startsWith(
-                    "image/"
-                )
-            ) {
-
-                photos++;
-
-
-                const img =
-                    document.createElement(
-                        "img"
-                    );
-
-                img.src =
-                    file.url;
-
-                img.loading =
-                    "lazy";
-
-                box.appendChild(
-                    img
-                );
-
-            }
-
-
-            else if (
-                file.type &&
-                file.type.startsWith(
-                    "video/"
-                )
-            ) {
-
-                videos++;
-
-
-                const video =
-                    document.createElement(
-                        "video"
-                    );
-
-                video.src =
-                    file.url;
-
-                video.controls =
-                    true;
-
-                box.appendChild(
-                    video
-                );
-
-            }
-
-
-            box.addEventListener(
-                "contextmenu",
-                event => {
-
-                    event.preventDefault();
-
-                    deleteFile(file);
-
-                }
-            );
-
-
-            gallery.appendChild(
-                box
-            );
-
-        }
-    );
-
-
-    document.getElementById(
-        "photoCount"
-    ).textContent =
-        "📷 " +
-        photos +
-        " Photos";
-
-
-    document.getElementById(
-        "videoCount"
-    ).textContent =
-        "🎥 " +
-        videos +
-        " Videos";
-
-
-    if (
-        vaultFiles.length === 0
-    ) {
-
-        gallery.innerHTML =
-            `
-            <div class="empty">
-                🔐<br>
-                Your private vault is empty
-            </div>
-            `;
-
-    }
-
-}
-
-
-/* =====================================================
-   DELETE
-===================================================== */
-
-async function deleteFile(file) {
-
-    if (
-        !confirm(
-            "Delete this file?"
-        )
-    )
-        return;
-
-
-    try {
-
-        await deleteObject(
-            ref(
-                storage,
-                file.path
-            )
-        );
-
-
-        await deleteDoc(
-            doc(
-                db,
-                "users",
-                currentUser.uid,
-                "files",
-                file.id
-            )
-        );
-
-
-        await loadFiles();
-
-    }
-    catch (error) {
-
-        console.error(error);
-
-        alert(
-            "Delete failed:\n\n" +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   PREMIUM MODAL
-===================================================== */
-
-function openUpgrade() {
-
-    document
-        .getElementById(
-            "upgradeModal"
-        )
-        .classList.remove(
-            "hidden"
-        );
-
-}
-
-
-document.getElementById(
-    "upgradeBtn"
-).addEventListener(
-    "click",
-    openUpgrade
-);
-
-
-document.getElementById(
-    "closeModal"
-).addEventListener(
-    "click",
-    () => {
-
-        document
-            .getElementById(
-                "upgradeModal"
-            )
-            .classList.add(
-                "hidden"
-            );
-
-    }
-);
-
-
-/* =====================================================
-   GOOGLE PLAY SUBSCRIPTION
-===================================================== */
-
-document.getElementById(
-    "subscribeBtn"
-).addEventListener(
-    "click",
-    () => {
-
-        /*
-           This button is intentionally not
-           pretending that a web browser
-           completed a Google Play purchase.
-
-           In the Capacitor Android version,
-           this button should call the native
-           Google Play Billing implementation.
-        */
-
-        alert(
-            "Google Play Billing is available " +
-            "in the Android app version.\n\n" +
-            "Install the Calculator Vault Android " +
-            "app from Google Play to subscribe."
-        );
-
-    }
-);
-
-
-/* =====================================================
-   LOCK VAULT
-===================================================== */
-
-document.getElementById(
-    "lockBtn"
-).addEventListener(
-    "click",
-    () => {
-
-        vaultPage.classList.add(
-            "hidden"
-        );
-
-        calculator.classList.remove(
-            "hidden"
-        );
-
-    }
-);
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-document.getElementById(
-    "logoutBtn"
-).addEventListener(
-    "click",
-    async () => {
-
-        try {
-
-            await signOut(auth);
-
-            vaultPage.classList.add(
-                "hidden"
-            );
-
-            calculator.classList.remove(
-                "hidden"
-            );
-
-        }
-        catch (error) {
-
-            alert(
-                "Sign out failed:\n\n" +
-                error.message
-            );
-
+    let photoCount = 0;
+    let videoCount = 0;
+
+    localFiles.forEach((file, index) => {
+        const isPhoto = file.type?.startsWith("image/");
+        const isVideo = file.type?.startsWith("video/");
+
+        if (isPhoto) photoCount++;
+        if (isVideo) videoCount++;
+
+        // Filter Logic
+        if (currentFilter === "photo" && !isPhoto) return;
+        if (currentFilter === "video" && !isVideo) return;
+
+        const box = document.createElement("div");
+        box.className = "file-box";
+
+        const fileUrl = file.blob ? URL.createObjectURL(file.blob) : "";
+        let mediaElement;
+
+        if (isPhoto) {
+            mediaElement = document.createElement("img");
+            mediaElement.src = fileUrl;
+        } else if (isVideo) {
+            mediaElement = document.createElement("video");
+            mediaElement.src = fileUrl;
         }
 
+        if (mediaElement) {
+            box.appendChild(mediaElement);
+            mediaElement.addEventListener("click", () => openMediaModal(fileUrl, file.type));
+        }
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "✕";
+        deleteBtn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            await deleteFile(index);
+        });
+
+        box.appendChild(deleteBtn);
+        gallery.appendChild(box);
+    });
+
+    const photoElement = document.getElementById("photoCount");
+    if (photoElement) photoElement.textContent = `📷 ${photoCount} Photos`;
+
+    const videoElement = document.getElementById("videoCount");
+    if (videoElement) videoElement.textContent = `🎥 ${videoCount} Videos`;
+}
+
+// FULLSCREEN MEDIA VIEW MODAL
+function openMediaModal(url, type) {
+    let previewModal = document.getElementById("previewModal");
+    
+    if (!previewModal) {
+        previewModal = document.createElement("div");
+        previewModal.id = "previewModal";
+        previewModal.className = "modal";
+        previewModal.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:100;";
+        previewModal.innerHTML = `
+            <button id="closePreview" style="position:absolute; top:20px; right:20px; font-size:24px; color:white; background:transparent; border:none; cursor:pointer;">✕</button>
+            <div id="mediaContainer" style="max-width:90%; max-height:80%;"></div>
+        `;
+        document.body.appendChild(previewModal);
+
+        document.getElementById("closePreview").addEventListener("click", () => {
+            previewModal.classList.add("hidden");
+            document.getElementById("mediaContainer").innerHTML = "";
+        });
     }
-);
+
+    const container = document.getElementById("mediaContainer");
+    container.innerHTML = "";
+
+    if (type.startsWith("image/")) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.style.cssText = "max-width:100%; max-height:80vh; border-radius:12px; object-fit:contain;";
+        container.appendChild(img);
+    } else if (type.startsWith("video/")) {
+        const video = document.createElement("video");
+        video.src = url;
+        video.controls = true;
+        video.autoplay = true;
+        video.style.cssText = "max-width:100%; max-height:80vh; border-radius:12px;";
+        container.appendChild(video);
+    }
+
+    previewModal.classList.remove("hidden");
+}
+
+async function deleteFile(index) {
+    if (!confirm("Are you sure you want to delete this file?")) return;
+    const fileObj = localFiles[index];
+    if (fileObj && fileObj.id) {
+        await deleteLocalFileDB(fileObj.id);
+    }
+    await loadFiles();
+}
