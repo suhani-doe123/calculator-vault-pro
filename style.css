@@ -137,6 +137,15 @@ h1{
     height:25px;
 }
 
+.forgot-link {
+    background: none;
+    border: none;
+    color: #63caff;
+    margin-top: 15px;
+    font-size: 14px;
+    text-decoration: underline;
+}
+
 
 /* VAULT */
 
@@ -166,12 +175,14 @@ header small{
 }
 
 header button{
-    width:46px;
-    height:46px;
+    padding: 0 12px;
+    height:42px;
     border:0;
     border-radius:14px;
     background:#192536;
     color:white;
+    font-weight: bold;
+    margin-left: 5px;
 }
 
 .card{
@@ -305,7 +316,7 @@ header button{
 }
 
 
-/* UPLOAD */
+/* UPLOAD & FILTER TABS */
 
 .uploadArea{
     display:flex;
@@ -339,7 +350,31 @@ header button{
     justify-content:space-between;
     color:#718096;
     font-size:12px;
-    margin:13px 2px;
+    margin:13px 2px 8px 2px;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid #29394d;
+    background: #111a27;
+    color: #8290a4;
+    font-size: 13px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.tab-btn.active {
+    background: #167cff;
+    color: white;
+    border-color: #167cff;
 }
 
 
@@ -351,18 +386,36 @@ header button{
     gap:8px;
 }
 
-.file{
-    aspect-ratio:1;
-    overflow:hidden;
-    border-radius:13px;
-    background:#151f2d;
+.file-box {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 13px;
+    background: #151f2d;
 }
 
-.file img,
-.file video{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+.file-box img,
+.file-box video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #ff6565;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .empty{
