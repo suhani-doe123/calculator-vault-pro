@@ -1,554 +1,2360 @@
 /* =====================================================
-   STORAGE LIMITS & STATE
+CALCULATOR PRO / VAULT PRO
+Complete script.js
+Default PIN: 2580
 ===================================================== */
+
+/* =====================================================
+STORAGE LIMITS & APP STATE
+===================================================== */
+
 const FREE_LIMIT = 1024 * 1024 * 1024; // 1 GB
 const PREMIUM_LIMIT = 10 * 1024 * 1024 * 1024; // 10 GB
+
 const SECRET_CODE = "2580";
 
 let isPremium = false;
+
 let localFiles = [];
+
 let calculatorExpression = "";
+
 let enteredPin = "";
+
 let userPin = localStorage.getItem("vault_pin") || "2580";
+
 let pinMode = "normal";
+
 let newPin = "";
-let currentFilter = "all"; // State for Filter: "all", "photo", "video"
+
+let currentFilter = "all";
 
 /* =====================================================
-   INDEXEDDB STORAGE ENGINE
+INDEXEDDB
 ===================================================== */
+
+const DB_NAME = "VaultStorageDB";
+const DB_VERSION = 1;
+const STORE_NAME = "files";
+
 function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open("VaultStorageDB", 1);
-        request.onupgradeneeded = e => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains("files")) {
-                db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
-            }
-        };
-        request.onsuccess = e => resolve(e.target.result);
-        request.onerror = e => reject(e.target.error);
-    });
+
+return new Promise((resolve, reject) => {
+
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+
+    request.onupgradeneeded = function (event) {
+
+        const db = event.target.result;
+
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+
+            db.createObjectStore(STORE_NAME, {
+                keyPath: "id",
+                autoIncrement: true
+            });
+
+        }
+
+    };
+
+
+    request.onsuccess = function () {
+
+        resolve(request.result);
+
+    };
+
+
+    request.onerror = function () {
+
+        reject(request.error);
+
+    };
+
+});
+
 }
+
+/* =====================================================
+SAVE FILE
+===================================================== */
 
 async function saveLocalFileDB(fileObj) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction("files", "readwrite");
-        const store = tx.objectStore("files");
-        const req = store.add(fileObj);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-    });
-}
 
-async function getLocalFilesDB() {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction("files", "readonly");
-        const store = tx.objectStore("files");
-        const req = store.getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
-    });
-}
+const db = await openDB();
 
-async function deleteLocalFileDB(id) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction("files", "readwrite");
-        const store = tx.objectStore("files");
-        const req = store.delete(id);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
-    });
+return new Promise((resolve, reject) => {
+
+    const transaction = db.transaction(
+        STORE_NAME,
+        "readwrite"
+    );
+
+    const store = transaction.objectStore(STORE_NAME);
+
+    const request = store.add(fileObj);
+
+
+    request.onsuccess = function () {
+
+        resolve(request.result);
+
+    };
+
+
+    request.onerror = function () {
+
+        reject(request.error);
+
+    };
+
+});
+
 }
 
 /* =====================================================
-   INITIALIZE APPLICATION
+GET ALL FILES
 ===================================================== */
-document.addEventListener("DOMContentLoaded", async () => {
-    localStorage.removeItem("is_premium");
 
-    setupCalculatorEvents();
-    setupPinEvents();
-    setupVaultEvents();
-    setupFilterEvents();
+async function getLocalFilesDB() {
 
-    try {
-        localFiles = await getLocalFilesDB();
-    } catch (err) {
-        console.error("IndexedDB Error:", err);
-        localFiles = [];
-    }
+const db = await openDB();
 
-    renderFiles();
-    updateStorage();
+return new Promise((resolve, reject) => {
+
+    const transaction = db.transaction(
+        STORE_NAME,
+        "readonly"
+    );
+
+    const store = transaction.objectStore(STORE_NAME);
+
+    const request = store.getAll();
+
+
+    request.onsuccess = function () {
+
+        resolve(request.result || []);
+
+    };
+
+
+    request.onerror = function () {
+
+        reject(request.error);
+
+    };
+
+});
+
+}
+
+/* =====================================================
+DELETE FILE
+===================================================== */
+
+async function deleteLocalFileDB(id) {
+
+const db = await openDB();
+
+return new Promise((resolve, reject) => {
+
+    const transaction = db.transaction(
+        STORE_NAME,
+        "readwrite"
+    );
+
+    const store = transaction.objectStore(STORE_NAME);
+
+    const request = store.delete(id);
+
+
+    request.onsuccess = function () {
+
+        resolve();
+
+    };
+
+
+    request.onerror = function () {
+
+        reject(request.error);
+
+    };
+
+});
+
+}
+
+/* =====================================================
+APPLICATION INITIALIZATION
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", async function () {
+
+setupCalculatorEvents();
+
+setupPinEvents();
+
+setupVaultEvents();
+
+setupFilterEvents();
+
+
+try {
+
+    localFiles = await getLocalFilesDB();
+
+} catch (error) {
+
+    console.error(
+        "IndexedDB loading error:",
+        error
+    );
+
+    localFiles = [];
+
+}
+
+
+renderFiles();
+
+updateStorage();
+
 });
 
 /* =====================================================
-   CALCULATOR ENGINE
+CALCULATOR
 ===================================================== */
+
 function setupCalculatorEvents() {
-    const display = document.getElementById("display");
 
-    document.querySelectorAll(".keys button").forEach(button => {
-        button.addEventListener("click", () => {
-            const value = button.dataset.value;
-            const action = button.dataset.action;
+const display =
+    document.getElementById("display");
 
-            if (!display) return;
-            if (display.textContent === "Error") calculatorExpression = "";
 
-            if (value !== undefined) {
-                calculatorExpression += value;
-                display.textContent = calculatorExpression;
-                return;
-            }
+document
+    .querySelectorAll(".keys button")
+    .forEach(function (button) {
 
-            if (action === "clear") {
-                calculatorExpression = "";
-                display.textContent = "0";
-                return;
-            }
+        button.addEventListener(
+            "click",
+            function () {
 
-            if (action === "delete") {
-                calculatorExpression = calculatorExpression.slice(0, -1);
-                display.textContent = calculatorExpression || "0";
-                return;
-            }
+                if (!display) return;
 
-            if (action === "sqrt") {
-                try {
-                    const val = safeCalculate(calculatorExpression || "0");
-                    if (val < 0) throw new Error("Math Error");
-                    calculatorExpression = String(Math.sqrt(val));
-                    display.textContent = calculatorExpression;
-                } catch {
-                    display.textContent = "Error";
+
+                const value =
+                    button.dataset.value;
+
+                const action =
+                    button.dataset.action;
+
+
+                /* Error reset */
+
+                if (
+                    display.textContent === "Error"
+                ) {
+
                     calculatorExpression = "";
-                }
-                return;
-            }
 
-            if (action === "equal") {
-                if (calculatorExpression === SECRET_CODE) {
-                    calculatorExpression = "";
                     display.textContent = "0";
-                    openPin();
-                    return;
+
                 }
 
-                try {
-                    const result = safeCalculate(calculatorExpression);
-                    if (isNaN(result) || !isFinite(result)) throw new Error("Error");
-                    calculatorExpression = String(Number(result.toFixed(8)));
-                    display.textContent = calculatorExpression;
-                } catch {
-                    display.textContent = "Error";
-                    calculatorExpression = "";
+
+                /* Number / operator */
+
+                if (value !== undefined) {
+
+                    calculatorExpression += value;
+
+                    display.textContent =
+                        calculatorExpression;
+
+                    return;
+
                 }
+
+
+                /* AC */
+
+                if (action === "clear") {
+
+                    calculatorExpression = "";
+
+                    display.textContent = "0";
+
+                    return;
+
+                }
+
+
+                /* DELETE */
+
+                if (action === "delete") {
+
+                    calculatorExpression =
+                        calculatorExpression.slice(0, -1);
+
+                    display.textContent =
+                        calculatorExpression || "0";
+
+                    return;
+
+                }
+
+
+                /* SQUARE ROOT */
+
+                if (action === "sqrt") {
+
+                    try {
+
+                        const value =
+                            safeCalculate(
+                                calculatorExpression || "0"
+                            );
+
+
+                        if (value < 0) {
+
+                            throw new Error(
+                                "Math Error"
+                            );
+
+                        }
+
+
+                        const result =
+                            Math.sqrt(value);
+
+
+                        calculatorExpression =
+                            formatNumber(result);
+
+
+                        display.textContent =
+                            calculatorExpression;
+
+
+                    } catch (error) {
+
+                        display.textContent =
+                            "Error";
+
+                        calculatorExpression = "";
+
+                    }
+
+                    return;
+
+                }
+
+
+                /* EQUAL */
+
+                if (action === "equal") {
+
+                    /*
+                       SECRET CODE
+                       2580 =
+                       opens vault PIN screen
+                    */
+
+                    if (
+                        calculatorExpression === SECRET_CODE
+                    ) {
+
+                        calculatorExpression = "";
+
+                        display.textContent = "0";
+
+                        openPin();
+
+                        return;
+
+                    }
+
+
+                    try {
+
+                        const result =
+                            safeCalculate(
+                                calculatorExpression
+                            );
+
+
+                        if (
+                            Number.isNaN(result) ||
+                            !Number.isFinite(result)
+                        ) {
+
+                            throw new Error(
+                                "Calculation Error"
+                            );
+
+                        }
+
+
+                        calculatorExpression =
+                            formatNumber(result);
+
+
+                        display.textContent =
+                            calculatorExpression;
+
+
+                    } catch (error) {
+
+                        display.textContent =
+                            "Error";
+
+                        calculatorExpression = "";
+
+                    }
+
+                }
+
             }
-        });
+
+        );
+
     });
+
 }
 
-function safeCalculate(exp) {
-    if (!exp) return 0;
-    let sanitized = exp
+/* =====================================================
+SAFE CALCULATOR
+===================================================== */
+
+function safeCalculate(expression) {
+
+if (!expression) {
+
+    return 0;
+
+}
+
+
+let sanitized =
+    expression
         .replace(/÷/g, "/")
         .replace(/×/g, "*")
         .replace(/−/g, "-");
 
-    sanitized = sanitized.replace(/([0-9.]+)%/g, "($1/100)");
 
-    if (/[^0-9+\-*/().%\s]/.test(sanitized)) {
-        throw new Error("Invalid Input");
-    }
+/*
+   Convert percentages
 
-    return Function(`"use strict"; return (${sanitized})`)();
+   Example:
+   50% → (50/100)
+*/
+
+sanitized =
+    sanitized.replace(
+        /([0-9.]+)%/g,
+        "($1/100)"
+    );
+
+
+/*
+   Only allow calculator characters
+*/
+
+if (
+    /[^0-9+\-*/().%\s]/.test(
+        sanitized
+    )
+) {
+
+    throw new Error(
+        "Invalid Input"
+    );
+
+}
+
+
+/*
+   Prevent dangerous expressions
+*/
+
+if (
+    sanitized.includes("++") ||
+    sanitized.includes("--") ||
+    sanitized.includes("**")
+) {
+
+    throw new Error(
+        "Invalid Expression"
+    );
+
+}
+
+
+return Function(
+    '"use strict"; return (' +
+    sanitized +
+    ')'
+)();
+
 }
 
 /* =====================================================
-   PIN CONTROLLER
+NUMBER FORMAT
 ===================================================== */
-function setupPinEvents() {
-    document.querySelectorAll("[data-pin]").forEach(button => {
-        button.addEventListener("click", () => {
-            const value = button.dataset.pin;
 
-            if (value === "delete") {
-                enteredPin = enteredPin.slice(0, -1);
-                updatePinDots();
-                return;
-            }
+function formatNumber(number) {
 
-            if (value === "enter") {
-                checkPin();
-                return;
-            }
+if (!Number.isFinite(number)) {
 
-            if (enteredPin.length < 4) {
-                enteredPin += value;
-                updatePinDots();
-            }
+    throw new Error(
+        "Invalid Number"
+    );
 
-            if (enteredPin.length === 4) {
-                setTimeout(checkPin, 150);
-            }
-        });
-    });
-
-    document.getElementById("forgotPinBtn")?.addEventListener("click", () => {
-        alert("Please subscribe to use the PIN recovery feature.");
-        window.location.href = "https://accounts.google.com";
-    });
 }
+
+
+return String(
+    Number(
+        Number(number).toFixed(8)
+    )
+);
+
+}
+
+/* =====================================================
+PIN SYSTEM
+===================================================== */
+
+function setupPinEvents() {
+
+document
+    .querySelectorAll("[data-pin]")
+    .forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                const value =
+                    button.dataset.pin;
+
+
+                /* DELETE */
+
+                if (value === "delete") {
+
+                    enteredPin =
+                        enteredPin.slice(0, -1);
+
+                    updatePinDots();
+
+                    return;
+
+                }
+
+
+                /* ENTER */
+
+                if (value === "enter") {
+
+                    checkPin();
+
+                    return;
+
+                }
+
+
+                /* DIGIT */
+
+                if (
+                    enteredPin.length < 4 &&
+                    /^[0-9]$/.test(value)
+                ) {
+
+                    enteredPin += value;
+
+                    updatePinDots();
+
+                }
+
+
+                /*
+                   Automatically check after
+                   entering 4 digits
+                */
+
+                if (
+                    enteredPin.length === 4
+                ) {
+
+                    setTimeout(
+                        checkPin,
+                        150
+                    );
+
+                }
+
+            }
+
+        );
+
+    });
+
+
+/* FORGOT PIN */
+
+const forgotButton =
+    document.getElementById(
+        "forgotPinBtn"
+    );
+
+
+if (forgotButton) {
+
+    forgotButton.addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "PIN recovery is not available yet."
+            );
+
+        }
+    );
+
+}
+
+}
+
+/* =====================================================
+OPEN PIN PAGE
+===================================================== */
 
 function openPin() {
-    document.getElementById("calculator")?.classList.add("hidden");
-    document.getElementById("vaultPage")?.classList.add("hidden");
-    document.getElementById("pinPage")?.classList.remove("hidden");
-    enteredPin = "";
-    newPin = "";
-    pinMode = "normal";
 
-    const heading = document.getElementById("pinSubHeading");
-    if (heading) heading.textContent = "Enter PIN";
+const calculator =
+    document.getElementById(
+        "calculator"
+    );
 
-    const error = document.getElementById("pinError");
-    if (error) error.textContent = "";
+const pinPage =
+    document.getElementById(
+        "pinPage"
+    );
 
-    updatePinDots();
+const vaultPage =
+    document.getElementById(
+        "vaultPage"
+    );
+
+
+calculator?.classList.add(
+    "hidden"
+);
+
+vaultPage?.classList.add(
+    "hidden"
+);
+
+pinPage?.classList.remove(
+    "hidden"
+);
+
+
+enteredPin = "";
+
+newPin = "";
+
+pinMode = "normal";
+
+
+const heading =
+    document.getElementById(
+        "pinSubHeading"
+    );
+
+
+if (heading) {
+
+    heading.textContent =
+        "Enter PIN";
+
 }
+
+
+const error =
+    document.getElementById(
+        "pinError"
+    );
+
+
+if (error) {
+
+    error.textContent = "";
+
+}
+
+
+updatePinDots();
+
+}
+
+/* =====================================================
+PIN DOTS
+===================================================== */
 
 function updatePinDots() {
-    let dots = "";
-    for (let i = 0; i < 4; i++) {
-        dots += i < enteredPin.length ? "● " : "○ ";
-    }
-    const dotsElement = document.getElementById("dots");
-    if (dotsElement) dotsElement.textContent = dots;
+
+let dots = "";
+
+
+for (
+    let i = 0;
+    i < 4;
+    i++
+) {
+
+    dots +=
+        i < enteredPin.length
+            ? "● "
+            : "○ ";
+
 }
 
-function pinError(message) {
-    const error = document.getElementById("pinError");
-    if (error) error.textContent = message;
-    enteredPin = "";
-    updatePinDots();
+
+const element =
+    document.getElementById(
+        "dots"
+    );
+
+
+if (element) {
+
+    element.textContent =
+        dots.trim();
+
 }
+
+}
+
+/* =====================================================
+PIN ERROR
+===================================================== */
+
+function showPinError(message) {
+
+const error =
+    document.getElementById(
+        "pinError"
+    );
+
+
+if (error) {
+
+    error.textContent =
+        message;
+
+}
+
+
+enteredPin = "";
+
+updatePinDots();
+
+}
+
+/* =====================================================
+CHECK PIN
+===================================================== */
 
 function checkPin() {
-    const error = document.getElementById("pinError");
 
-    if (pinMode === "normal") {
-        if (enteredPin.length !== 4) {
-            pinError("PIN must be 4 digits");
-            return;
-        }
+const error =
+    document.getElementById(
+        "pinError"
+    );
 
-        if (enteredPin === userPin) {
-            document.getElementById("pinPage")?.classList.add("hidden");
-            document.getElementById("vaultPage")?.classList.remove("hidden");
-            if (error) error.textContent = "";
-            enteredPin = "";
-            updatePinDots();
-            loadFiles();
-        } else {
-            pinError("Incorrect PIN");
-        }
+
+/* NORMAL LOGIN */
+
+if (pinMode === "normal") {
+
+    if (
+        enteredPin.length !== 4
+    ) {
+
+        showPinError(
+            "PIN must be 4 digits"
+        );
+
         return;
+
     }
 
-    if (pinMode === "change-old") {
-        if (enteredPin.length !== 4) {
-            pinError("Please enter your current PIN");
-            return;
+
+    if (
+        enteredPin === userPin
+    ) {
+
+        document
+            .getElementById(
+                "pinPage"
+            )
+            ?.classList.add(
+                "hidden"
+            );
+
+
+        document
+            .getElementById(
+                "vaultPage"
+            )
+            ?.classList.remove(
+                "hidden"
+            );
+
+
+        if (error) {
+
+            error.textContent = "";
+
         }
 
-        if (enteredPin !== userPin) {
-            pinError("Incorrect current PIN");
-            return;
-        }
 
         enteredPin = "";
+
+        updatePinDots();
+
+        loadFiles();
+
+        return;
+
+    }
+
+
+    showPinError(
+        "Incorrect PIN"
+    );
+
+    return;
+
+}
+
+
+/* CHANGE OLD PIN */
+
+if (
+    pinMode === "change-old"
+) {
+
+    if (
+        enteredPin.length !== 4
+    ) {
+
+        showPinError(
+            "Please enter your current PIN"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        enteredPin !== userPin
+    ) {
+
+        showPinError(
+            "Incorrect current PIN"
+        );
+
+        return;
+
+    }
+
+
+    enteredPin = "";
+
+    pinMode = "change-new";
+
+
+    if (error) {
+
+        error.textContent = "";
+
+    }
+
+
+    const heading =
+        document.getElementById(
+            "pinSubHeading"
+        );
+
+
+    if (heading) {
+
+        heading.textContent =
+            "Enter New 4-Digit PIN";
+
+    }
+
+
+    updatePinDots();
+
+    return;
+
+}
+
+
+/* CHANGE NEW PIN */
+
+if (
+    pinMode === "change-new"
+) {
+
+    if (
+        enteredPin.length !== 4
+    ) {
+
+        showPinError(
+            "New PIN must be 4 digits"
+        );
+
+        return;
+
+    }
+
+
+    newPin = enteredPin;
+
+    enteredPin = "";
+
+    pinMode = "change-confirm";
+
+
+    if (error) {
+
+        error.textContent = "";
+
+    }
+
+
+    const heading =
+        document.getElementById(
+            "pinSubHeading"
+        );
+
+
+    if (heading) {
+
+        heading.textContent =
+            "Confirm New 4-Digit PIN";
+
+    }
+
+
+    updatePinDots();
+
+    return;
+
+}
+
+
+/* CONFIRM NEW PIN */
+
+if (
+    pinMode === "change-confirm"
+) {
+
+    if (
+        enteredPin.length !== 4
+    ) {
+
+        showPinError(
+            "Please confirm your new PIN"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        enteredPin !== newPin
+    ) {
+
+        showPinError(
+            "PINs do not match"
+        );
+
+        newPin = "";
+
         pinMode = "change-new";
-        if (error) error.textContent = "";
-        const heading = document.getElementById("pinSubHeading");
-        if (heading) heading.textContent = "Enter New 4-Digit PIN";
-        updatePinDots();
-        return;
-    }
 
-    if (pinMode === "change-new") {
-        if (enteredPin.length !== 4) {
-            pinError("New PIN must be 4 digits");
-            return;
-        }
-        newPin = enteredPin;
-        enteredPin = "";
-        pinMode = "change-confirm";
-        if (error) error.textContent = "";
-        const heading = document.getElementById("pinSubHeading");
-        if (heading) heading.textContent = "Confirm New 4-Digit PIN";
-        updatePinDots();
-        return;
-    }
 
-    if (pinMode === "change-confirm") {
-        if (enteredPin.length !== 4) {
-            pinError("Please confirm your new PIN");
-            return;
+        const heading =
+            document.getElementById(
+                "pinSubHeading"
+            );
+
+
+        if (heading) {
+
+            heading.textContent =
+                "Enter New 4-Digit PIN";
+
         }
 
-        if (enteredPin !== newPin) {
-            pinError("PINs do not match");
-            newPin = "";
-            pinMode = "change-new";
-            const heading = document.getElementById("pinSubHeading");
-            if (heading) heading.textContent = "Enter New 4-Digit PIN";
-            return;
-        }
 
-        userPin = newPin;
-        localStorage.setItem("vault_pin", userPin);
-        enteredPin = "";
-        newPin = "";
-        pinMode = "normal";
-        updatePinDots();
-        if (error) error.textContent = "";
-        alert("Your PIN has been changed successfully!");
-
-        document.getElementById("pinPage")?.classList.add("hidden");
-        document.getElementById("vaultPage")?.classList.remove("hidden");
         return;
+
     }
+
+
+    userPin = newPin;
+
+
+    localStorage.setItem(
+        "vault_pin",
+        userPin
+    );
+
+
+    enteredPin = "";
+
+    newPin = "";
+
+    pinMode = "normal";
+
+
+    updatePinDots();
+
+
+    if (error) {
+
+        error.textContent = "";
+
+    }
+
+
+    alert(
+        "Your PIN has been changed successfully!"
+    );
+
+
+    document
+        .getElementById(
+            "pinPage"
+        )
+        ?.classList.add(
+            "hidden"
+        );
+
+
+    document
+        .getElementById(
+            "vaultPage"
+        )
+        ?.classList.remove(
+            "hidden"
+        );
+
+}
+
 }
 
 /* =====================================================
-   VAULT CONTROLLER
+VAULT EVENTS
 ===================================================== */
+
 function setupVaultEvents() {
-    document.getElementById("photoInput")?.addEventListener("change", handleUpload);
-    document.getElementById("videoInput")?.addEventListener("change", handleUpload);
 
-    document.getElementById("upgradeBtn")?.addEventListener("click", () => {
-        document.getElementById("upgradeModal")?.classList.remove("hidden");
-    });
+/* PHOTO UPLOAD */
 
-    document.getElementById("closeModal")?.addEventListener("click", () => {
-        document.getElementById("upgradeModal")?.classList.add("hidden");
-    });
+document
+    .getElementById(
+        "photoInput"
+    )
+    ?.addEventListener(
+        "change",
+        handleUpload
+    );
 
-    document.getElementById("subscribeBtn")?.addEventListener("click", () => {
-        document.getElementById("upgradeModal")?.classList.add("hidden");
-        window.location.href = "https://accounts.google.com";
-    });
 
-    document.getElementById("lockBtn")?.addEventListener("click", () => {
-        document.getElementById("vaultPage")?.classList.add("hidden");
-        document.getElementById("calculator")?.classList.remove("hidden");
-    });
+/* VIDEO UPLOAD */
 
-    document.getElementById("changePinBtn")?.addEventListener("click", () => {
-        pinMode = "change-old";
-        enteredPin = "";
-        newPin = "";
-        document.getElementById("vaultPage")?.classList.add("hidden");
-        document.getElementById("pinPage")?.classList.remove("hidden");
-        const heading = document.getElementById("pinSubHeading");
-        if (heading) heading.textContent = "Enter Current PIN";
-        const error = document.getElementById("pinError");
-        if (error) error.textContent = "";
-        updatePinDots();
-    });
-}
+document
+    .getElementById(
+        "videoInput"
+    )
+    ?.addEventListener(
+        "change",
+        handleUpload
+    );
 
-// FILTER SYSTEM Setup (ALL / PHOTOS / VIDEOS)
-function setupFilterEvents() {
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            currentFilter = btn.dataset.filter;
-            renderFiles();
-        });
-    });
+
+/* UPGRADE */
+
+document
+    .getElementById(
+        "upgradeBtn"
+    )
+    ?.addEventListener(
+        "click",
+        function () {
+
+            document
+                .getElementById(
+                    "upgradeModal"
+                )
+                ?.classList.remove(
+                    "hidden"
+                );
+
+        }
+    );
+
+
+/* CLOSE UPGRADE MODAL */
+
+document
+    .getElementById(
+        "closeModal"
+    )
+    ?.addEventListener(
+        "click",
+        function () {
+
+            document
+                .getElementById(
+                    "upgradeModal"
+                )
+                ?.classList.add(
+                    "hidden"
+                );
+
+        }
+    );
+
+
+/* SUBSCRIBE */
+
+document
+    .getElementById(
+        "subscribeBtn"
+    )
+    ?.addEventListener(
+        "click",
+        function () {
+
+            alert(
+                "Premium subscription is not connected yet."
+            );
+
+        }
+    );
+
+
+/* LOCK */
+
+document
+    .getElementById(
+        "lockBtn"
+    )
+    ?.addEventListener(
+        "click",
+        function () {
+
+            lockVault();
+
+        }
+    );
+
+
+/* CHANGE PIN */
+
+document
+    .getElementById(
+        "changePinBtn"
+    )
+    ?.addEventListener(
+        "click",
+        function () {
+
+            startPinChange();
+
+        }
+    );
+
 }
 
 /* =====================================================
-   STORAGE MANAGEMENT
+LOCK VAULT
 ===================================================== */
-function getUsedBytes() {
-    return localFiles.reduce((total, file) => total + Number(file.size || 0), 0);
+
+function lockVault() {
+
+document
+    .getElementById(
+        "vaultPage"
+    )
+    ?.classList.add(
+        "hidden"
+    );
+
+
+document
+    .getElementById(
+        "pinPage"
+    )
+    ?.classList.add(
+        "hidden"
+    );
+
+
+document
+    .getElementById(
+        "calculator"
+    )
+    ?.classList.remove(
+        "hidden"
+    );
+
+
+enteredPin = "";
+
+newPin = "";
+
+pinMode = "normal";
+
 }
+
+/* =====================================================
+CHANGE PIN START
+===================================================== */
+
+function startPinChange() {
+
+pinMode = "change-old";
+
+enteredPin = "";
+
+newPin = "";
+
+
+document
+    .getElementById(
+        "vaultPage"
+    )
+    ?.classList.add(
+        "hidden"
+    );
+
+
+document
+    .getElementById(
+        "pinPage"
+    )
+    ?.classList.remove(
+        "hidden"
+    );
+
+
+const heading =
+    document.getElementById(
+        "pinSubHeading"
+    );
+
+
+if (heading) {
+
+    heading.textContent =
+        "Enter Current PIN";
+
+}
+
+
+const error =
+    document.getElementById(
+        "pinError"
+    );
+
+
+if (error) {
+
+    error.textContent = "";
+
+}
+
+
+updatePinDots();
+
+}
+
+/* =====================================================
+FILTER SYSTEM
+===================================================== */
+
+function setupFilterEvents() {
+
+document
+    .querySelectorAll(
+        ".tab-btn"
+    )
+    .forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                document
+                    .querySelectorAll(
+                        ".tab-btn"
+                    )
+                    .forEach(
+                        function (btn) {
+
+                            btn.classList.remove(
+                                "active"
+                            );
+
+                        }
+                    );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                currentFilter =
+                    button.dataset.filter ||
+                    "all";
+
+
+                renderFiles();
+
+            }
+        );
+
+    });
+
+}
+
+/* =====================================================
+STORAGE CALCULATION
+===================================================== */
+
+function getUsedBytes() {
+
+return localFiles.reduce(
+    function (total, file) {
+
+        return total +
+            Number(
+                file.size || 0
+            );
+
+    },
+    0
+);
+
+}
+
+/* =====================================================
+UPDATE STORAGE UI
+===================================================== */
 
 function updateStorage() {
-    const used = getUsedBytes();
-    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
-    const percentage = Math.min(100, (used / limit) * 100);
 
-    const usedElement = document.getElementById("used");
-    if (usedElement) usedElement.textContent = "Used: " + (used / (1024 * 1024)).toFixed(1) + " MB";
+const used =
+    getUsedBytes();
 
-    const available = document.getElementById("available");
-    if (available) available.textContent = "Available: " + ((limit - used) / (1024 * 1024 * 1024)).toFixed(2) + " GB";
 
-    const percent = document.getElementById("percent");
-    if (percent) percent.textContent = percentage.toFixed(1) + "%";
+const limit =
+    isPremium
+        ? PREMIUM_LIMIT
+        : FREE_LIMIT;
 
-    const progress = document.getElementById("progressBar");
-    if (progress) progress.style.width = percentage + "%";
+
+const percentage =
+    Math.min(
+        100,
+        (used / limit) * 100
+    );
+
+
+const usedElement =
+    document.getElementById(
+        "used"
+    );
+
+
+if (usedElement) {
+
+    usedElement.textContent =
+        "Used: " +
+        formatStorageSize(
+            used
+        );
+
+}
+
+
+const availableBytes =
+    Math.max(
+        0,
+        limit - used
+    );
+
+
+const availableElement =
+    document.getElementById(
+        "available"
+    );
+
+
+if (availableElement) {
+
+    availableElement.textContent =
+        "Available: " +
+        formatGB(
+            availableBytes
+        );
+
+}
+
+
+const percentElement =
+    document.getElementById(
+        "percent"
+    );
+
+
+if (percentElement) {
+
+    percentElement.textContent =
+        percentage.toFixed(1) +
+        "%";
+
+}
+
+
+const progress =
+    document.getElementById(
+        "progressBar"
+    );
+
+
+if (progress) {
+
+    progress.style.width =
+        percentage + "%";
+
+}
+
 }
 
 /* =====================================================
-   FILE UPLOADER & RENDER WITH FILTER & PREVIEW
+STORAGE FORMAT
 ===================================================== */
-async function handleUpload(e) {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
 
-    const limit = isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
-    const currentUsed = getUsedBytes();
-    let selectedSize = files.reduce((sum, f) => sum + f.size, 0);
+function formatStorageSize(bytes) {
 
-    if (currentUsed + selectedSize > limit) {
-        alert(isPremium ? "Storage limit of 10 GB has been reached." : "Storage limit of 1 GB has been reached.");
-        e.target.value = "";
-        return;
-    }
+if (bytes <= 0) {
 
-    for (const file of files) {
-        try {
-            const fileObj = {
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                blob: file
-            };
-            await saveLocalFileDB(fileObj);
-        } catch (err) {
-            console.error("Upload error:", err);
-        }
-    }
+    return "0 MB";
 
-    e.target.value = "";
-    await loadFiles();
 }
+
+
+const MB =
+    bytes /
+    (1024 * 1024);
+
+
+if (MB < 1024) {
+
+    return MB.toFixed(1) +
+        " MB";
+
+}
+
+
+const GB =
+    MB / 1024;
+
+
+return GB.toFixed(2) +
+    " GB";
+
+}
+
+function formatGB(bytes) {
+
+return (
+    bytes /
+    (1024 * 1024 * 1024)
+).toFixed(2) +
+    " GB";
+
+}
+
+/* =====================================================
+FILE UPLOAD
+===================================================== */
+
+async function handleUpload(event) {
+
+const files =
+    Array.from(
+        event.target.files || []
+    );
+
+
+if (!files.length) {
+
+    return;
+
+}
+
+
+const limit =
+    isPremium
+        ? PREMIUM_LIMIT
+        : FREE_LIMIT;
+
+
+const currentUsed =
+    getUsedBytes();
+
+
+const selectedSize =
+    files.reduce(
+        function (sum, file) {
+
+            return sum +
+                file.size;
+
+        },
+        0
+    );
+
+
+/* STORAGE LIMIT */
+
+if (
+    currentUsed +
+    selectedSize >
+    limit
+) {
+
+    alert(
+        isPremium
+            ? "Storage limit of 10 GB has been reached."
+            : "Storage limit of 1 GB has been reached."
+    );
+
+
+    event.target.value = "";
+
+    return;
+
+}
+
+
+/* SAVE FILES */
+
+for (
+    const file of files
+) {
+
+    try {
+
+        const fileObj = {
+
+            name: file.name,
+
+            size: file.size,
+
+            type: file.type,
+
+            blob: file,
+
+            createdAt:
+                Date.now()
+
+        };
+
+
+        await saveLocalFileDB(
+            fileObj
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "File upload error:",
+            error
+        );
+
+
+        alert(
+            "Could not save " +
+            file.name
+        );
+
+    }
+
+}
+
+
+event.target.value = "";
+
+
+await loadFiles();
+
+}
+
+/* =====================================================
+LOAD FILES
+===================================================== */
 
 async function loadFiles() {
-    try {
-        localFiles = await getLocalFilesDB();
-    } catch (err) {
-        console.error("Error loading files:", err);
-    }
-    renderFiles();
-    updateStorage();
+
+try {
+
+    localFiles =
+        await getLocalFilesDB();
+
+} catch (error) {
+
+    console.error(
+        "Error loading files:",
+        error
+    );
+
+    localFiles = [];
+
 }
+
+
+renderFiles();
+
+updateStorage();
+
+}
+
+/* =====================================================
+RENDER GALLERY
+===================================================== */
 
 function renderFiles() {
-    const gallery = document.getElementById("gallery");
-    if (!gallery) return;
 
-    gallery.innerHTML = "";
-    let photoCount = 0;
-    let videoCount = 0;
+const gallery =
+    document.getElementById(
+        "gallery"
+    );
 
-    localFiles.forEach((file, index) => {
-        const isPhoto = file.type?.startsWith("image/");
-        const isVideo = file.type?.startsWith("video/");
 
-        if (isPhoto) photoCount++;
-        if (isVideo) videoCount++;
+if (!gallery) {
 
-        // Filter Logic
-        if (currentFilter === "photo" && !isPhoto) return;
-        if (currentFilter === "video" && !isVideo) return;
+    return;
 
-        const box = document.createElement("div");
-        box.className = "file-box";
+}
 
-        const fileUrl = file.blob ? URL.createObjectURL(file.blob) : "";
-        let mediaElement;
+
+gallery.innerHTML = "";
+
+
+let photoCount = 0;
+
+let videoCount = 0;
+
+
+localFiles.forEach(
+    function (file) {
+
+        const isPhoto =
+            file.type &&
+            file.type.startsWith(
+                "image/"
+            );
+
+
+        const isVideo =
+            file.type &&
+            file.type.startsWith(
+                "video/"
+            );
+
 
         if (isPhoto) {
-            mediaElement = document.createElement("img");
-            mediaElement.src = fileUrl;
-        } else if (isVideo) {
-            mediaElement = document.createElement("video");
-            mediaElement.src = fileUrl;
+
+            photoCount++;
+
         }
+
+
+        if (isVideo) {
+
+            videoCount++;
+
+        }
+
+
+        /* FILTER */
+
+        if (
+            currentFilter === "photo" &&
+            !isPhoto
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            currentFilter === "video" &&
+            !isVideo
+        ) {
+
+            return;
+
+        }
+
+
+        const box =
+            document.createElement(
+                "div"
+            );
+
+
+        box.className =
+            "file-box";
+
+
+        /* MEDIA */
+
+        let mediaElement = null;
+
+        let fileUrl = "";
+
+
+        if (
+            file.blob instanceof Blob
+        ) {
+
+            fileUrl =
+                URL.createObjectURL(
+                    file.blob
+                );
+
+        }
+
+
+        if (
+            isPhoto &&
+            fileUrl
+        ) {
+
+            mediaElement =
+                document.createElement(
+                    "img"
+                );
+
+
+            mediaElement.src =
+                fileUrl;
+
+
+            mediaElement.alt =
+                file.name ||
+                "Photo";
+
+
+            mediaElement.loading =
+                "lazy";
+
+
+            mediaElement.addEventListener(
+                "click",
+                function () {
+
+                    openMediaModal(
+                        fileUrl,
+                        file.type
+                    );
+
+                }
+            );
+
+        }
+
+
+        if (
+            isVideo &&
+            fileUrl
+        ) {
+
+            mediaElement =
+                document.createElement(
+                    "video"
+                );
+
+
+            mediaElement.src =
+                fileUrl;
+
+
+            mediaElement.controls =
+                false;
+
+
+            mediaElement.playsInline =
+                true;
+
+
+            mediaElement.preload =
+                "metadata";
+
+
+            mediaElement.addEventListener(
+                "click",
+                function () {
+
+                    openMediaModal(
+                        fileUrl,
+                        file.type
+                    );
+
+                }
+            );
+
+        }
+
 
         if (mediaElement) {
-            box.appendChild(mediaElement);
-            mediaElement.addEventListener("click", () => openMediaModal(fileUrl, file.type));
+
+            box.appendChild(
+                mediaElement
+            );
+
         }
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.className = "delete-btn";
-        deleteBtn.textContent = "✕";
-        deleteBtn.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            await deleteFile(index);
-        });
 
-        box.appendChild(deleteBtn);
-        gallery.appendChild(box);
-    });
+        /* FILE NAME */
 
-    const photoElement = document.getElementById("photoCount");
-    if (photoElement) photoElement.textContent = `📷 ${photoCount} Photos`;
+        const nameElement =
+            document.createElement(
+                "div"
+            );
 
-    const videoElement = document.getElementById("videoCount");
-    if (videoElement) videoElement.textContent = `🎥 ${videoCount} Videos`;
+
+        nameElement.className =
+            "file-name";
+
+
+        nameElement.textContent =
+            file.name ||
+            "File";
+
+
+        box.appendChild(
+            nameElement
+        );
+
+
+        /* DELETE BUTTON */
+
+        const deleteButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deleteButton.className =
+            "delete-btn";
+
+
+        deleteButton.textContent =
+            "✕";
+
+
+        deleteButton.setAttribute(
+            "aria-label",
+            "Delete file"
+        );
+
+
+        /*
+           IMPORTANT:
+           Delete using IndexedDB ID,
+           NOT array index.
+        */
+
+        deleteButton.addEventListener(
+            "click",
+            async function (event) {
+
+                event.stopPropagation();
+
+
+                await deleteFile(
+                    file.id
+                );
+
+            }
+        );
+
+
+        box.appendChild(
+            deleteButton
+        );
+
+
+        gallery.appendChild(
+            box
+        );
+
+    }
+);
+
+
+/* PHOTO COUNT */
+
+const photoElement =
+    document.getElementById(
+        "photoCount"
+    );
+
+
+if (photoElement) {
+
+    photoElement.textContent =
+        "📷 " +
+        photoCount +
+        " Photos";
+
 }
 
-// FULLSCREEN MEDIA VIEW MODAL
-function openMediaModal(url, type) {
-    let previewModal = document.getElementById("previewModal");
-    
-    if (!previewModal) {
-        previewModal = document.createElement("div");
-        previewModal.id = "previewModal";
-        previewModal.className = "modal";
-        previewModal.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.9); display:flex; align-items:center; justify-content:center; z-index:100;";
-        previewModal.innerHTML = `
-            <button id="closePreview" style="position:absolute; top:20px; right:20px; font-size:24px; color:white; background:transparent; border:none; cursor:pointer;">✕</button>
-            <div id="mediaContainer" style="max-width:90%; max-height:80%;"></div>
-        `;
-        document.body.appendChild(previewModal);
 
-        document.getElementById("closePreview").addEventListener("click", () => {
-            previewModal.classList.add("hidden");
-            document.getElementById("mediaContainer").innerHTML = "";
-        });
+/* VIDEO COUNT */
+
+const videoElement =
+    document.getElementById(
+        "videoCount"
+    );
+
+
+if (videoElement) {
+
+    videoElement.textContent =
+        "🎥 " +
+        videoCount +
+        " Videos";
+
+}
+
+}
+
+/* =====================================================
+MEDIA PREVIEW MODAL
+===================================================== */
+
+function openMediaModal(
+url,
+type
+) {
+
+let previewModal =
+    document.getElementById(
+        "previewModal"
+    );
+
+
+/* CREATE MODAL ON FIRST USE */
+
+if (!previewModal) {
+
+    previewModal =
+        document.createElement(
+            "div"
+        );
+
+
+    previewModal.id =
+        "previewModal";
+
+
+    previewModal.className =
+        "modal";
+
+
+    previewModal.innerHTML = `
+
+        <button
+            id="closePreview"
+            class="preview-close"
+            aria-label="Close preview">
+            ✕
+        </button>
+
+        <div
+            id="mediaContainer"
+            class="media-container">
+        </div>
+
+    `;
+
+
+    document.body.appendChild(
+        previewModal
+    );
+
+
+    document
+        .getElementById(
+            "closePreview"
+        )
+        .addEventListener(
+            "click",
+            closeMediaModal
+        );
+
+
+    previewModal.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target ===
+                previewModal
+            ) {
+
+                closeMediaModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+const container =
+    document.getElementById(
+        "mediaContainer"
+    );
+
+
+if (!container) {
+
+    return;
+
+}
+
+
+container.innerHTML = "";
+
+
+/* IMAGE */
+
+if (
+    type &&
+    type.startsWith(
+        "image/"
+    )
+) {
+
+    const img =
+        document.createElement(
+            "img"
+        );
+
+
+    img.src = url;
+
+
+    img.alt =
+        "Preview";
+
+
+    img.className =
+        "preview-image";
+
+
+    container.appendChild(
+        img
+    );
+
+}
+
+
+/* VIDEO */
+
+else if (
+    type &&
+    type.startsWith(
+        "video/"
+    )
+) {
+
+    const video =
+        document.createElement(
+            "video"
+        );
+
+
+    video.src = url;
+
+
+    video.controls = true;
+
+    video.autoplay = true;
+
+    video.playsInline = true;
+
+
+    video.className =
+        "preview-video";
+
+
+    container.appendChild(
+        video
+    );
+
+}
+
+
+previewModal.classList.remove(
+    "hidden"
+);
+
+
+document.body.style.overflow =
+    "hidden";
+
+}
+
+/* =====================================================
+CLOSE MEDIA MODAL
+===================================================== */
+
+function closeMediaModal() {
+
+const modal =
+    document.getElementById(
+        "previewModal"
+    );
+
+
+const container =
+    document.getElementById(
+        "mediaContainer"
+    );
+
+
+if (container) {
+
+    const video =
+        container.querySelector(
+            "video"
+        );
+
+
+    if (video) {
+
+        video.pause();
+
+        video.removeAttribute(
+            "src"
+        );
+
+        video.load();
+
     }
 
-    const container = document.getElementById("mediaContainer");
+
     container.innerHTML = "";
 
-    if (type.startsWith("image/")) {
-        const img = document.createElement("img");
-        img.src = url;
-        img.style.cssText = "max-width:100%; max-height:80vh; border-radius:12px; object-fit:contain;";
-        container.appendChild(img);
-    } else if (type.startsWith("video/")) {
-        const video = document.createElement("video");
-        video.src = url;
-        video.controls = true;
-        video.autoplay = true;
-        video.style.cssText = "max-width:100%; max-height:80vh; border-radius:12px;";
-        container.appendChild(video);
-    }
-
-    previewModal.classList.remove("hidden");
 }
 
-async function deleteFile(index) {
-    if (!confirm("Are you sure you want to delete this file?")) return;
-    const fileObj = localFiles[index];
-    if (fileObj && fileObj.id) {
-        await deleteLocalFileDB(fileObj.id);
-    }
-    await loadFiles();
+
+if (modal) {
+
+    modal.classList.add(
+        "hidden"
+    );
+
 }
+
+
+document.body.style.overflow =
+    "";
+
+}
+
+/* =====================================================
+DELETE FILE
+===================================================== */
+
+async function deleteFile(id) {
+
+if (!id) {
+
+    return;
+
+}
+
+
+const file =
+    localFiles.find(
+        function (item) {
+
+            return item.id === id;
+
+        }
+    );
+
+
+if (!file) {
+
+    return;
+
+}
+
+
+const confirmed =
+    confirm(
+        "Are you sure you want to delete this file?"
+    );
+
+
+if (!confirmed) {
+
+    return;
+
+}
+
+
+try {
+
+    await deleteLocalFileDB(
+        id
+    );
+
+
+    /*
+       Remove from memory immediately
+    */
+
+    localFiles =
+        localFiles.filter(
+            function (item) {
+
+                return item.id !== id;
+
+            }
+        );
+
+
+    renderFiles();
+
+    updateStorage();
+
+
+} catch (error) {
+
+    console.error(
+        "Delete error:",
+        error
+    );
+
+
+    alert(
+        "Could not delete the file."
+    );
+
+}
+
+}
+
+/* =====================================================
+ESC KEY SUPPORT
+===================================================== */
+
+document.addEventListener(
+"keydown",
+function (event) {
+
+    if (
+        event.key === "Escape"
+    ) {
+
+        closeMediaModal();
+
+        document
+            .getElementById(
+                "upgradeModal"
+            )
+            ?.classList.add(
+                "hidden"
+            );
+
+    }
+
+}
+
+);
+
+/* =====================================================
+PWA SERVICE WORKER
+===================================================== */
+
+if (
+"serviceWorker" in navigator
+) {
+
+window.addEventListener(
+    "load",
+    function () {
+
+        navigator.serviceWorker
+            .register("./sw.js")
+            .then(
+                function (registration) {
+
+                    console.log(
+                        "Calculator Pro PWA ready:",
+                        registration.scope
+                    );
+
+                }
+            )
+            .catch(
+                function (error) {
+
+                    console.error(
+                        "Service Worker registration failed:",
+                        error
+                    );
+
+                }
+            );
+
+    }
+);
+
+}
+
+/* =====================================================
+END OF SCRIPT
+===================================================== */
