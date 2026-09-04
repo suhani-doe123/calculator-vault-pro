@@ -297,23 +297,15 @@
 
 <script>
     if ("serviceWorker" in navigator) {
-
-        window.addEventListener("load", function () {
-
-            navigator.serviceWorker
-                .register("./sw.js")
-                .then(function () {
-                    console.log("Calculator Pro PWA ready");
+        window.addEventListener("load", function() {
+            navigator.serviceWorker.register("./sw.js")
+                .then(function() {
+                    console.log("PWA ready");
                 })
-                .catch(function (error) {
-                    console.error(
-                        "Service Worker registration failed:",
-                        error
-                    );
+                .catch(function(error) {
+                    console.error("Service Worker error:", error);
                 });
-
         });
-
     }
 </script>
 
