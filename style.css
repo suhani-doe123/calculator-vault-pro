@@ -10,56 +10,56 @@
 body {
     background: radial-gradient(circle at top left, #1a2332, #0d1117);
     color: #f0f6fc;
-    min-height: 100vh;
+    height: 100vh;
     width: 100vw;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    overflow-y: auto;
+    align-items: center;
+    overflow: hidden;
 }
 
 .hidden {
     display: none !important;
 }
 
-/* CALCULATOR SCREEN */
+/* CALCULATOR SCREEN - FIXED FOR MOBILE FIT */
 .app {
     width: 100%;
     max-width: 400px;
-    padding: 16px;
+    height: 100vh;
+    max-height: 850px;
+    padding: 10px 16px 16px 16px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    gap: 12px;
-    min-height: 100vh;
+    gap: 8px;
 }
 
 .main-title {
-    font-size: 13px;
+    font-size: 12px;
     text-align: center;
     color: #8b949e;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     font-weight: 600;
     text-transform: uppercase;
-    margin-top: 10px;
 }
 
 .display-card {
     text-align: right;
     margin-top: auto;
-    margin-bottom: 12px;
-    padding: 8px;
+    margin-bottom: 4px;
+    padding: 4px 8px;
 }
 
 .small-display {
-    font-size: 18px;
+    font-size: 16px;
     color: #8b949e;
-    min-height: 26px;
+    min-height: 22px;
     letter-spacing: 1px;
 }
 
 .display {
-    font-size: 48px;
+    font-size: 42px;
     font-weight: 300;
     color: #ffffff;
     word-break: break-all;
@@ -69,18 +69,18 @@ body {
 .keys {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 10px;
 }
 
 .key {
-    height: 62px;
+    height: 56px;
     border-radius: 50%;
     border: none;
     background: rgba(33, 38, 45, 0.8);
     backdrop-filter: blur(10px);
     color: #f0f6fc;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 500;
     cursor: pointer;
     display: flex;
@@ -104,9 +104,10 @@ body {
 .screen {
     width: 100%;
     max-width: 420px;
-    min-height: 100vh;
+    height: 100vh;
     padding: 24px 20px;
     box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .pin-card {
@@ -198,7 +199,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .vault-header {
@@ -371,7 +373,6 @@ body {
     border-radius: 10px;
     overflow: hidden;
     background: #161b22;
-    box-label: item;
 }
 
 .media-item img, 
