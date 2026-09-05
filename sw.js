@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculator-pro-v1";
+const CACHE_NAME = "calculator-pro-v2";
 
 const FILES = [
   "./",
@@ -8,66 +8,42 @@ const FILES = [
   "./manifest.json"
 ];
 
-
-/* INSTALL */
 self.addEventListener("install", event => {
-  
   event.waitUntil(
-    
-    caches.open(CACHE_NAME).then(cache => {
-      
-      return cache.addAll(FILES);
-      
-    })
-    
+    caches.open(CACHE_NAME)
+    .then(cache => cache.addAll(FILES))
+    .then(() => self.skipWaiting())
   );
-  
-  self.skipWaiting();
-  
 });
 
-
-/* ACTIVATE */
 self.addEventListener("activate", event => {
-  
   event.waitUntil(
-    
-    caches.keys().then(cacheNames => {
-      
-      return Promise.all(
-        
-        cacheNames
+    caches.keys().then(names =>
+      Promise.all(
+        names
         .filter(name => name !== CACHE_NAME)
         .map(name => caches.delete(name))
-        
-      );
-      
-    })
-    
+      )
+    )
+    .then(() => self.clients.claim())
   );
-  
-  self.clients.claim();
-  
 });
 
-
-/* FETCH */
 self.addEventListener("fetch", event => {
-  
   event.respondWith(
-    
-    caches.match(event.request).then(cachedResponse => {
+    fetch(event.request)
+    .then(response => {
       
-      if (cachedResponse) {
-        
-        return cachedResponse;
-        
-      }
+      const copy = response.clone();
       
-      return fetch(event.request);
+      caches.open(CACHE_NAME).then(cache => {
+        cache.put(event.request, copy);
+      });
       
+      return response;
     })
-    
+    .catch(() =>
+      caches.match(event.request)
+    )
   );
-  
 });
