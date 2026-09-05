@@ -1,313 +1,171 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Vault Pro</title>
+    <!-- MANIFEST LINK ADDED -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- CALCULATOR SCREEN -->
+    <div class="app" id="calcApp">
+        <h1 class="main-title">CALCULATOR</h1>
 
-<meta name="theme-color" content="#111827">
-<meta name="description"
-      content="Calculator Pro with a secure private vault for photos and videos.">
-
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Calculator Pro">
-
-<title>Calculator Pro</title>
-
-<!-- Main CSS -->
-<link rel="stylesheet" href="style.css">
-
-<!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
-
-<!-- App Icon -->
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-
-</head><body><!-- ============================= -->
-<!-- CALCULATOR SCREEN -->
-<!-- ============================= -->
-
-<div id="calculator">
-
-    <h1>CALCULATOR</h1>
-
-    <div id="display">0</div>
-
-    <div class="keys">
-
-        <button class="op" data-action="clear">AC</button>
-        <button class="op" data-action="delete">⌫</button>
-        <button class="op" data-value="%">%</button>
-        <button class="op" data-value="÷">÷</button>
-
-        <button data-value="7">7</button>
-        <button data-value="8">8</button>
-        <button data-value="9">9</button>
-        <button class="op" data-value="×">×</button>
-
-        <button data-value="4">4</button>
-        <button data-value="5">5</button>
-        <button data-value="6">6</button>
-        <button class="op" data-value="−">−</button>
-
-        <button data-value="1">1</button>
-        <button data-value="2">2</button>
-        <button data-value="3">3</button>
-        <button class="op" data-value="+">+</button>
-
-        <button data-value=".">.</button>
-        <button data-value="0">0</button>
-        <button class="op" data-action="sqrt">√</button>
-        <button class="equal" data-action="equal">=</button>
-
-    </div>
-</div>
-
-
-<!-- ============================= -->
-<!-- PIN UNLOCK PAGE -->
-<!-- ============================= -->
-
-<div id="pinPage" class="hidden">
-
-    <div class="pinBox">
-
-        <div class="lock">🔐</div>
-
-        <h2 id="pinSubHeading">Enter PIN</h2>
-
-        <div id="dots">○ ○ ○ ○</div>
-
-        <div class="pinKeys">
-
-            <button data-pin="1">1</button>
-            <button data-pin="2">2</button>
-            <button data-pin="3">3</button>
-
-            <button data-pin="4">4</button>
-            <button data-pin="5">5</button>
-            <button data-pin="6">6</button>
-
-            <button data-pin="7">7</button>
-            <button data-pin="8">8</button>
-            <button data-pin="9">9</button>
-
-            <button data-pin="delete">⌫</button>
-            <button data-pin="0">0</button>
-            <button data-pin="enter">✓</button>
-
+        <div class="display-card">
+            <div class="small-display" id="history"></div>
+            <div class="display" id="display">0</div>
         </div>
 
-        <div id="pinError"></div>
+        <div class="keys">
+            <button class="key btn-ac" data-key="clear">AC</button>
+            <button class="key btn-del" data-key="delete">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+            </button>
+            <button class="key btn-op" data-value="%">%</button>
+            <button class="key btn-op" data-value="/">÷</button>
 
-        <button id="forgotPinBtn" class="forgot-link">
-            Forgot PIN?
-        </button>
+            <button class="key" data-value="7">7</button>
+            <button class="key" data-value="8">8</button>
+            <button class="key" data-value="9">9</button>
+            <button class="key btn-op" data-value="*">×</button>
 
+            <button class="key" data-value="4">4</button>
+            <button class="key" data-value="5">5</button>
+            <button class="key" data-value="6">6</button>
+            <button class="key btn-op" data-value="-">−</button>
+
+            <button class="key" data-value="1">1</button>
+            <button class="key" data-value="2">2</button>
+            <button class="key" data-value="3">3</button>
+            <button class="key btn-op" data-value="+">+</button>
+
+            <button class="key" data-value=".">.</button>
+            <button class="key" data-value="0">0</button>
+            <button class="key btn-op" data-key="sqrt">√</button>
+            <button class="key btn-equal" data-key="equal">=</button>
+        </div>
     </div>
 
-</div>
+    <!-- PIN SCREEN -->
+    <div class="screen hidden" id="pinScreen">
+        <div class="pin-card">
+            <div class="lock-icon">🔐</div>
+            <h2 id="pinScreenTitle">Enter PIN</h2>
+            <div class="dots-container">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            
+            <div class="pin-grid">
+                <button class="pin-key" data-pin="1">1</button>
+                <button class="pin-key" data-pin="2">2</button>
+                <button class="pin-key" data-pin="3">3</button>
+                <button class="pin-key" data-pin="4">4</button>
+                <button class="pin-key" data-pin="5">5</button>
+                <button class="pin-key" data-pin="6">6</button>
+                <button class="pin-key" data-pin="7">7</button>
+                <button class="pin-key" data-pin="8">8</button>
+                <button class="pin-key" data-pin="9">9</button>
+                <button class="pin-key" id="pinDelete">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                </button>
+                <button class="pin-key" data-pin="0">0</button>
+                <button class="pin-key" id="pinSubmit">✓</button>
+            </div>
+            <a href="#" class="forgot-pin">Forgot PIN?</a>
+        </div>
+    </div>
 
-
-<!-- ============================= -->
-<!-- VAULT GALLERY PAGE -->
-<!-- ============================= -->
-
-<div id="vaultPage" class="hidden">
-
-    <div class="vault">
-
-        <header>
-
-            <div>
+    <!-- VAULT SCREEN -->
+    <div class="screen hidden" id="vaultScreen">
+        <div class="vault-container">
+            <div class="vault-header">
                 <h2>🔐 My Vault</h2>
+                <div class="header-actions">
+                    <button class="pill-btn" id="changePinBtn">🔑 ChangePIN</button>
+                    <button class="pill-btn" id="lockVault">🔒 Lock</button>
+                </div>
             </div>
 
-            <div>
-                <button id="changePinBtn">🔑 PIN</button>
-                <button id="lockBtn">🔒 Lock</button>
+            <!-- STORAGE CARD -->
+            <div class="card storage-card">
+                <div class="card-head">
+                    <span>Storage</span>
+                    <span class="highlight" id="storagePercent">0.0%</span>
+                </div>
+                <div class="progress-bg">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="card-foot">
+                    <span id="storageUsed">Used: 0.0 MB</span>
+                    <span id="storageLimit">Available: 1.00 GB</span>
+                </div>
             </div>
 
-        </header>
-
-
-        <!-- STORAGE CARD -->
-
-        <div class="card">
-
-            <div class="storageHeader">
-                <span>Storage</span>
-                <span id="percent">0%</span>
+            <!-- UPGRADE CARD -->
+            <div class="card upgrade-card">
+                <div>
+                    <h3>Upgrade Storage</h3>
+                    <p id="upgradeSubText">10 GB Premium Space ($15/mo)</p>
+                </div>
+                <button class="btn-upgrade" id="openUpgradeModal">⭐ Upgrade</button>
             </div>
 
-            <div class="progress">
-                <div id="progressBar"></div>
+            <!-- MAIN ACTION BUTTONS (DIRECT UPLOAD) -->
+            <div class="tabs">
+                <button class="tab-btn" id="tabPhotos">🖼️ Photos</button>
+                <button class="tab-btn" id="tabVideos">🎥 Videos</button>
             </div>
 
-            <div class="storageNumbers">
-                <span id="used">Used: 0 MB</span>
-                <span id="available">
-                    Available: 1.00 GB
-                </span>
+            <!-- SUB TABS (FILTERING) -->
+            <div class="sub-tabs">
+                <button class="sub-tab active" id="subTabAll">All</button>
+                <button class="sub-tab" id="subTabPhotos">Photos</button>
+                <button class="sub-tab" id="subTabVideos">Videos</button>
             </div>
 
+            <!-- HIDDEN FILE INPUTS -->
+            <input type="file" id="photoInput" accept="image/*" multiple class="hidden">
+            <input type="file" id="videoInput" accept="video/*" multiple class="hidden">
+
+            <!-- MEDIA GALLERY GRID -->
+            <div class="media-grid" id="mediaGrid"></div>
         </div>
-
-
-        <!-- PREMIUM -->
-
-        <div class="premiumCard">
-
-            <div>
-                <b>Upgrade Storage</b>
-                <small>10 GB Premium Space ($15/mo)</small>
-            </div>
-
-            <button id="upgradeBtn">
-                ⭐ Upgrade
-            </button>
-
-        </div>
-
-
-        <!-- UPLOAD -->
-
-        <div class="uploadArea">
-
-            <label for="photoInput">
-                🖼️ Photos
-            </label>
-
-            <input
-                type="file"
-                id="photoInput"
-                accept="image/*"
-                multiple
-            >
-
-
-            <label for="videoInput">
-                📹 Videos
-            </label>
-
-            <input
-                type="file"
-                id="videoInput"
-                accept="video/*"
-                multiple
-            >
-
-        </div>
-
-
-        <!-- COUNTS -->
-
-        <div class="counts">
-
-            <span id="photoCount">
-                📷 0 Photos
-            </span>
-
-            <span id="videoCount">
-                🎥 0 Videos
-            </span>
-
-        </div>
-
-
-        <!-- FILTER -->
-
-        <div class="filter-tabs">
-
-            <button
-                class="tab-btn active"
-                data-filter="all">
-                All
-            </button>
-
-            <button
-                class="tab-btn"
-                data-filter="photo">
-                Photos
-            </button>
-
-            <button
-                class="tab-btn"
-                data-filter="video">
-                Videos
-            </button>
-
-        </div>
-
-
-        <!-- GALLERY -->
-
-        <div id="gallery"></div>
-
     </div>
 
-</div>
-
-
-<!-- ============================= -->
-<!-- UPGRADE MODAL -->
-<!-- ============================= -->
-
-<div id="upgradeModal" class="modal hidden">
-
-    <div class="modalBox">
-
-        <button id="closeModal">
-            ✕
-        </button>
-
-        <div class="star">⭐</div>
-
-        <h2>Go Premium</h2>
-
-        <div class="price">
-            $15 USD
-            <small>/mo</small>
+    <!-- PREVIEW MODAL -->
+    <div class="modal hidden" id="previewModal">
+        <div class="modal-card preview-card">
+            <span class="close-preview" id="closePreview">&times;</span>
+            <div id="previewContainer"></div>
         </div>
-
-        <p>
-            Get up to 10 GB Storage with cloud sync feature.
-        </p>
-
-        <button id="subscribeBtn">
-            Subscribe Now
-        </button>
-
     </div>
 
-</div>
+    <!-- UPGRADE / SUBSCRIBE MODAL POPUP -->
+    <div class="modal hidden" id="upgradeModal">
+        <div class="modal-card">
+            <h2>👑 Calculator Pro Premium</h2>
+            <p class="sub-text">To change PIN or upgrade your storage to 10GB, subscribe to Premium.</p>
 
+            <div class="price-tag">$15 <small>/ month</small></div>
 
-<!-- ============================= -->
-<!-- JAVASCRIPT -->
-<!-- ============================= -->
+            <ul class="feature-list">
+                <li>Change & Custom PIN Lock</li>
+                <li>10GB Cloud Storage</li>
+                <li>Enhanced Security</li>
+            </ul>
 
-<script src="script.js"></script>
+            <div class="payment-buttons">
+                <button class="pay-btn primary" id="confirmSubscribe">✨ Subscribe Now ($15/mo)</button>
+                <button class="pay-btn cancel" id="closeModal">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-
-<!-- ============================= -->
-<!-- SERVICE WORKER -->
-<!-- ============================= -->
-
-<script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", function() {
-            navigator.serviceWorker.register("./sw.js")
-                .then(function() {
-                    console.log("PWA ready");
-                })
-                .catch(function(error) {
-                    console.error("Service Worker error:", error);
-                });
-        });
-    }
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
