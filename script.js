@@ -243,12 +243,23 @@ if (forgotPinLink) {
     });
 }
 
-// DIRECT UPLOAD BUTTON CLICKS
+// DIRECT UPLOAD BUTTON CLICKS WITH TOUCH SUPPORT
 if (tabPhotos && photoInput) {
-    tabPhotos.addEventListener("click", () => photoInput.click());
+    ["click", "touchstart"].forEach(eventType => {
+        tabPhotos.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            photoInput.click();
+        });
+    });
 }
+
 if (tabVideos && videoInput) {
-    tabVideos.addEventListener("click", () => videoInput.click());
+    ["click", "touchstart"].forEach(eventType => {
+        tabVideos.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            videoInput.click();
+        });
+    });
 }
 
 if (photoInput) {
@@ -370,7 +381,7 @@ function updateStorageUI() {
     if (progressBar) progressBar.style.width = `${percent}%`;
 }
 
-// PREVIEW MODAL LOGIC WITH BACK BUTTON SUPPORT
+// PREVIEW MODAL LOGIC (Fixed for Android App to prevent closing)
 function openPreview(item, mediaUrl) {
     if (!previewContainer || !previewModal) return;
     previewContainer.innerHTML = "";
@@ -383,12 +394,11 @@ function openPreview(item, mediaUrl) {
         el.src = mediaUrl;
         el.controls = true;
         el.autoplay = true;
+        el.muted = true; // Prevents WebView crash
+        el.setAttribute("playsinline", "true");
     }
     previewContainer.appendChild(el);
     previewModal.classList.remove("hidden");
-
-    // Push history state so Android back button closes preview instead of exiting app
-    history.pushState({ previewOpen: true }, "");
 }
 
 function closePreviewModal() {
@@ -396,18 +406,13 @@ function closePreviewModal() {
     if (previewContainer) previewContainer.innerHTML = "";
 }
 
-window.addEventListener("popstate", (event) => {
-    if (!previewModal.classList.contains("hidden")) {
-        closePreviewModal();
-    }
-});
-
+// Close preview when clicking/touching the close button securely
 if (closePreview) {
-    closePreview.addEventListener("click", () => {
-        closePreviewModal();
-        if (history.state && history.state.previewOpen) {
-            history.back();
-        }
+    ["click", "touchstart"].forEach(eventType => {
+        closePreview.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            closePreviewModal();
+        });
     });
 }
 
