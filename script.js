@@ -98,7 +98,7 @@ function deleteMediaFromDB(id) {
     tx.objectStore("media").delete(id);
 }
 
-// CALCULATOR LOGIC (Supports both click and touchstart for APK compatibility)
+// CALCULATOR LOGIC
 function updateDisplay() {
     if (display) display.textContent = expression || "0";
 }
@@ -112,7 +112,7 @@ function safeCalculate(exp) {
 calcButtons.forEach(button => {
     ["click", "touchstart"].forEach(eventType => {
         button.addEventListener(eventType, (e) => {
-            e.preventDefault(); // Prevents duplicate triggers on mobile taps
+            e.preventDefault();
             const val = button.dataset.value;
             const key = button.dataset.key;
 
@@ -243,7 +243,7 @@ if (forgotPinLink) {
     });
 }
 
-// DIRECT UPLOAD BUTTON CLICKS WITH TOUCH SUPPORT
+// DIRECT UPLOAD BUTTON CLICKS
 if (tabPhotos && photoInput) {
     ["click", "touchstart"].forEach(eventType => {
         tabPhotos.addEventListener(eventType, (e) => {
@@ -357,7 +357,11 @@ function renderMedia() {
             deleteMedia(item.id);
         };
 
-        div.onclick = () => openPreview(item, mediaUrl);
+        div.onclick = (e) => {
+            e.stopPropagation();
+            openPreview(item, mediaUrl);
+        };
+        
         div.appendChild(mediaEl);
         div.appendChild(delBtn);
         mediaGrid.appendChild(div);
@@ -381,7 +385,7 @@ function updateStorageUI() {
     if (progressBar) progressBar.style.width = `${percent}%`;
 }
 
-// PREVIEW MODAL LOGIC (Fixed for Android App to prevent closing)
+// PREVIEW MODAL LOGIC (Super Safe for Android WebViews)
 function openPreview(item, mediaUrl) {
     if (!previewContainer || !previewModal) return;
     previewContainer.innerHTML = "";
@@ -394,7 +398,7 @@ function openPreview(item, mediaUrl) {
         el.src = mediaUrl;
         el.controls = true;
         el.autoplay = true;
-        el.muted = true; // Prevents WebView crash
+        el.muted = true;
         el.setAttribute("playsinline", "true");
     }
     previewContainer.appendChild(el);
@@ -402,16 +406,35 @@ function openPreview(item, mediaUrl) {
 }
 
 function closePreviewModal() {
-    if (previewModal) previewModal.classList.add("hidden");
-    if (previewContainer) previewContainer.innerHTML = "";
+    if (previewModal) {
+        previewModal.classList.add("hidden");
+    }
+    if (previewContainer) {
+        // Clear video/image completely so memory frees up and video stops playing
+        previewContainer.innerHTML = "";
+    }
 }
 
-// Close preview when clicking/touching the close button securely
+// Close preview cleanly using click and touchstart without bubbling
 if (closePreview) {
     ["click", "touchstart"].forEach(eventType => {
         closePreview.addEventListener(eventType, (e) => {
             e.preventDefault();
+            e.stopPropagation();
             closePreviewModal();
+        });
+    });
+}
+
+// Also allow clicking outside the preview box to close it safely
+if (previewModal) {
+    ["click", "touchstart"].forEach(eventType => {
+        previewModal.addEventListener(eventType, (e) => {
+            if (e.target === previewModal) {
+                e.preventDefault();
+                e.stopPropagation();
+                closePreviewModal();
+            }
         });
     });
 }
