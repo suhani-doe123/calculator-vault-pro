@@ -18,7 +18,7 @@ const pinDelete = document.getElementById("pinDelete");
 const pinSubmit = document.getElementById("pinSubmit");
 const changePinBtn = document.getElementById("changePinBtn");
 const lockVaultBtn = document.getElementById("lockVault");
-const forgotPinLink = document.querySelector(".forgot-pin"); // Forgot PIN Link Element
+const forgotPinLink = document.querySelector(".forgot-pin");
 
 const openUpgradeModal = document.getElementById("openUpgradeModal");
 const upgradeModal = document.getElementById("upgradeModal");
@@ -66,6 +66,10 @@ dbRequest.onsuccess = (e) => {
     loadStoredMedia();
 };
 
+dbRequest.onerror = (e) => {
+    console.error("IndexedDB error:", e);
+};
+
 function loadStoredMedia() {
     if (!db) return;
     const tx = db.transaction("media", "readonly");
@@ -89,13 +93,14 @@ function saveMediaToDB(item) {
 }
 
 function deleteMediaFromDB(id) {
+    if (!db) return;
     const tx = db.transaction("media", "readwrite");
     tx.objectStore("media").delete(id);
 }
 
 // CALCULATOR LOGIC
 function updateDisplay() {
-    display.textContent = expression || "0";
+    if (display) display.textContent = expression || "0";
 }
 
 function safeCalculate(exp) {
@@ -115,7 +120,7 @@ calcButtons.forEach(button => {
             updateDisplay();
         } else if (key === "clear") {
             expression = "";
-            history.textContent = "";
+            if (history) history.textContent = "";
             updateDisplay();
         } else if (key === "delete") {
             expression = expression.slice(0, -1);
@@ -135,7 +140,7 @@ calcButtons.forEach(button => {
                 return;
             }
             try {
-                history.textContent = expression + " =";
+                if (history) history.textContent = expression + " =";
                 expression = String(safeCalculate(expression));
             } catch {
                 expression = "Error";
@@ -148,14 +153,12 @@ calcButtons.forEach(button => {
 // PIN SCREEN LOGIC
 function openPinScreen(forPinChange = false) {
     isVerifyingOldPinForChange = forPinChange;
-    calcApp.classList.add("hidden");
-    vaultScreen.classList.add("hidden");
-    pinScreen.classList.remove("hidden");
+    if (calcApp) calcApp.classList.add("hidden");
+    if (vaultScreen) vaultScreen.classList.add("hidden");
+    if (pinScreen) pinScreen.classList.remove("hidden");
     
-    if (isVerifyingOldPinForChange) {
-        pinScreenTitle.textContent = "Enter Old PIN";
-    } else {
-        pinScreenTitle.textContent = "Enter PIN";
+    if (pinScreenTitle) {
+        pinScreenTitle.textContent = isVerifyingOldPinForChange ? "Enter Old PIN" : "Enter PIN";
     }
     
     currentPin = "";
@@ -177,40 +180,49 @@ pinButtons.forEach(btn => {
     });
 });
 
-pinDelete.addEventListener("click", () => {
-    currentPin = currentPin.slice(0, -1);
-    updateDots();
-});
-
-pinSubmit.addEventListener("click", () => {
-    if (currentPin === SECRET_PIN) {
-        if (isVerifyingOldPinForChange) {
-            pinScreen.classList.add("hidden");
-            vaultScreen.classList.remove("hidden");
-            upgradeModal.classList.remove("hidden");
-            isVerifyingOldPinForChange = false;
-        } else {
-            pinScreen.classList.add("hidden");
-            vaultScreen.classList.remove("hidden");
-            loadStoredMedia();
-        }
-    } else {
-        alert("Incorrect PIN");
-        currentPin = "";
+if (pinDelete) {
+    pinDelete.addEventListener("click", () => {
+        currentPin = currentPin.slice(0, -1);
         updateDots();
-    }
-});
+    });
+}
 
-changePinBtn.addEventListener("click", () => {
-    openPinScreen(true);
-});
+if (pinSubmit) {
+    pinSubmit.addEventListener("click", () => {
+        if (currentPin === SECRET_PIN) {
+            if (pinScreen) pinScreen.classList.add("hidden");
+            if (vaultScreen) vaultScreen.classList.remove("hidden");
 
-lockVaultBtn.addEventListener("click", () => {
-    vaultScreen.classList.add("hidden");
-    calcApp.classList.remove("hidden");
-});
+            if (isVerifyingOldPinForChange) {
+                // Old PIN matched for change PIN action
+                if (upgradeModal) upgradeModal.classList.remove("hidden");
+                isVerifyingOldPinForChange = false;
+            } else {
+                loadStoredMedia();
+            }
+        } else {
+            alert("Incorrect PIN");
+            currentPin = "";
+            updateDots();
+        }
+    });
+}
 
-// FORGET PIN LINK LOGIC (Auto-subscribe aagathu, popup mattum kaattum)
+if (changePinBtn) {
+    changePinBtn.addEventListener("click", () => {
+        openPinScreen(true);
+    });
+}
+
+if (lockVaultBtn) {
+    lockVaultBtn.addEventListener("click", () => {
+        if (vaultScreen) vaultScreen.classList.add("hidden");
+        if (calcApp) calcApp.classList.remove("hidden");
+        expression = "";
+        updateDisplay();
+    });
+}
+
 if (forgotPinLink) {
     forgotPinLink.addEventListener("click", (e) => {
         e.preventDefault();
@@ -221,11 +233,19 @@ if (forgotPinLink) {
 }
 
 // DIRECT UPLOAD BUTTON CLICKS
-tabPhotos.addEventListener("click", () => photoInput.click());
-tabVideos.addEventListener("click", () => videoInput.click());
+if (tabPhotos && photoInput) {
+    tabPhotos.addEventListener("click", () => photoInput.click());
+}
+if (tabVideos && videoInput) {
+    tabVideos.addEventListener("click", () => videoInput.click());
+}
 
-photoInput.addEventListener("change", (e) => handleFileUpload(e.target.files));
-videoInput.addEventListener("change", (e) => handleFileUpload(e.target.files));
+if (photoInput) {
+    photoInput.addEventListener("change", (e) => handleFileUpload(e.target.files));
+}
+if (videoInput) {
+    videoInput.addEventListener("change", (e) => handleFileUpload(e.target.files));
+}
 
 async function handleFileUpload(files) {
     const fileList = Array.from(files);
@@ -260,14 +280,14 @@ async function handleFileUpload(files) {
 
     renderMedia();
     updateStorageUI();
-    photoInput.value = "";
-    videoInput.value = "";
+    if (photoInput) photoInput.value = "";
+    if (videoInput) videoInput.value = "";
 }
 
 // FILTER SUB-TABS
-subTabAll.addEventListener("click", (e) => setSubFilter("all", e.target));
-subTabPhotos.addEventListener("click", (e) => setSubFilter("image", e.target));
-subTabVideos.addEventListener("click", (e) => setSubFilter("video", e.target));
+if (subTabAll) subTabAll.addEventListener("click", (e) => setSubFilter("all", e.target));
+if (subTabPhotos) subTabPhotos.addEventListener("click", (e) => setSubFilter("image", e.target));
+if (subTabVideos) subTabVideos.addEventListener("click", (e) => setSubFilter("video", e.target));
 
 function setSubFilter(filter, target) {
     currentFilter = filter;
@@ -278,6 +298,7 @@ function setSubFilter(filter, target) {
 
 // RENDER GALLERY
 function renderMedia() {
+    if (!mediaGrid) return;
     mediaGrid.innerHTML = "";
 
     const filtered = mediaFiles.filter(item => {
@@ -286,7 +307,7 @@ function renderMedia() {
     });
 
     if (filtered.length === 0) {
-        mediaGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #62748e; padding: 20px;">No media found.</p>`;
+        mediaGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #8b949e; padding: 20px; font-size: 13px;">No media found.</p>`;
         return;
     }
 
@@ -331,15 +352,16 @@ function deleteMedia(id) {
 function updateStorageUI() {
     const totalBytes = mediaFiles.reduce((acc, item) => acc + item.size, 0);
     const usedMB = (totalBytes / (1024 * 1024)).toFixed(1);
-    const percent = ((totalBytes / STORAGE_LIMIT_BYTES) * 100).toFixed(1);
+    const percent = Math.min(((totalBytes / STORAGE_LIMIT_BYTES) * 100), 100).toFixed(1);
 
-    storageUsedText.textContent = `Used: ${usedMB} MB`;
-    storagePercent.textContent = `${percent}%`;
-    progressBar.style.width = `${Math.min(percent, 100)}%`;
+    if (storageUsedText) storageUsedText.textContent = `Used: ${usedMB} MB`;
+    if (storagePercent) storagePercent.textContent = `${percent}%`;
+    if (progressBar) progressBar.style.width = `${percent}%`;
 }
 
 // PREVIEW MODAL LOGIC
 function openPreview(item, mediaUrl) {
+    if (!previewContainer || !previewModal) return;
     previewContainer.innerHTML = "";
     let el;
     if (item.type === "image") {
@@ -355,17 +377,23 @@ function openPreview(item, mediaUrl) {
     previewModal.classList.remove("hidden");
 }
 
-closePreview.addEventListener("click", () => {
-    previewModal.classList.add("hidden");
-    previewContainer.innerHTML = "";
-});
+if (closePreview) {
+    closePreview.addEventListener("click", () => {
+        if (previewModal) previewModal.classList.add("hidden");
+        if (previewContainer) previewContainer.innerHTML = "";
+    });
+}
 
 // MODAL & UPGRADE LOGIC
 if (openUpgradeModal) {
-    openUpgradeModal.addEventListener("click", () => upgradeModal.classList.remove("hidden"));
+    openUpgradeModal.addEventListener("click", () => {
+        if (upgradeModal) upgradeModal.classList.remove("hidden");
+    });
 }
 if (closeModal) {
-    closeModal.addEventListener("click", () => upgradeModal.classList.add("hidden"));
+    closeModal.addEventListener("click", () => {
+        if (upgradeModal) upgradeModal.classList.add("hidden");
+    });
 }
 if (confirmSubscribe) {
     confirmSubscribe.addEventListener("click", () => {
@@ -373,7 +401,7 @@ if (confirmSubscribe) {
     });
 }
 
-// REGISTER SERVICE WORKER FOR PWA (ADDED FIX)
+// REGISTER SERVICE WORKER FOR PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
