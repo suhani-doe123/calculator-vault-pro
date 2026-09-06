@@ -98,7 +98,7 @@ function deleteMediaFromDB(id) {
     tx.objectStore("media").delete(id);
 }
 
-// CALCULATOR LOGIC
+// CALCULATOR LOGIC (Supports both click and touchstart for APK compatibility)
 function updateDisplay() {
     if (display) display.textContent = expression || "0";
 }
@@ -110,43 +110,46 @@ function safeCalculate(exp) {
 }
 
 calcButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        const val = button.dataset.value;
-        const key = button.dataset.key;
+    ["click", "touchstart"].forEach(eventType => {
+        button.addEventListener(eventType, (e) => {
+            e.preventDefault(); // Prevents duplicate triggers on mobile taps
+            const val = button.dataset.value;
+            const key = button.dataset.key;
 
-        if (val !== undefined) {
-            if (expression === "Error") expression = "";
-            expression += val;
-            updateDisplay();
-        } else if (key === "clear") {
-            expression = "";
-            if (history) history.textContent = "";
-            updateDisplay();
-        } else if (key === "delete") {
-            expression = expression.slice(0, -1);
-            updateDisplay();
-        } else if (key === "sqrt") {
-            try {
-                expression = String(Math.sqrt(safeCalculate(expression)));
-            } catch {
-                expression = "Error";
-            }
-            updateDisplay();
-        } else if (key === "equal") {
-            if (expression === SECRET_PIN) {
-                expression = "";
+            if (val !== undefined) {
+                if (expression === "Error") expression = "";
+                expression += val;
                 updateDisplay();
-                openPinScreen(false);
-                return;
+            } else if (key === "clear") {
+                expression = "";
+                if (history) history.textContent = "";
+                updateDisplay();
+            } else if (key === "delete") {
+                expression = expression.slice(0, -1);
+                updateDisplay();
+            } else if (key === "sqrt") {
+                try {
+                    expression = String(Math.sqrt(safeCalculate(expression)));
+                } catch {
+                    expression = "Error";
+                }
+                updateDisplay();
+            } else if (key === "equal") {
+                if (expression === SECRET_PIN) {
+                    expression = "";
+                    updateDisplay();
+                    openPinScreen(false);
+                    return;
+                }
+                try {
+                    if (history) history.textContent = expression + " =";
+                    expression = String(safeCalculate(expression));
+                } catch {
+                    expression = "Error";
+                }
+                updateDisplay();
             }
-            try {
-                if (history) history.textContent = expression + " =";
-                expression = String(safeCalculate(expression));
-            } catch {
-                expression = "Error";
-            }
-            updateDisplay();
-        }
+        });
     });
 });
 
@@ -172,38 +175,47 @@ function updateDots() {
 }
 
 pinButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-        if (currentPin.length < 4) {
-            currentPin += btn.dataset.pin;
-            updateDots();
-        }
+    ["click", "touchstart"].forEach(eventType => {
+        btn.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            if (currentPin.length < 4) {
+                currentPin += btn.dataset.pin;
+                updateDots();
+            }
+        });
     });
 });
 
 if (pinDelete) {
-    pinDelete.addEventListener("click", () => {
-        currentPin = currentPin.slice(0, -1);
-        updateDots();
+    ["click", "touchstart"].forEach(eventType => {
+        pinDelete.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            currentPin = currentPin.slice(0, -1);
+            updateDots();
+        });
     });
 }
 
 if (pinSubmit) {
-    pinSubmit.addEventListener("click", () => {
-        if (currentPin === SECRET_PIN) {
-            if (pinScreen) pinScreen.classList.add("hidden");
-            if (vaultScreen) vaultScreen.classList.remove("hidden");
+    ["click", "touchstart"].forEach(eventType => {
+        pinSubmit.addEventListener(eventType, (e) => {
+            e.preventDefault();
+            if (currentPin === SECRET_PIN) {
+                if (pinScreen) pinScreen.classList.add("hidden");
+                if (vaultScreen) vaultScreen.classList.remove("hidden");
 
-            if (isVerifyingOldPinForChange) {
-                if (upgradeModal) upgradeModal.classList.remove("hidden");
-                isVerifyingOldPinForChange = false;
+                if (isVerifyingOldPinForChange) {
+                    if (upgradeModal) upgradeModal.classList.remove("hidden");
+                    isVerifyingOldPinForChange = false;
+                } else {
+                    loadStoredMedia();
+                }
             } else {
-                loadStoredMedia();
+                alert("Incorrect PIN");
+                currentPin = "";
+                updateDots();
             }
-        } else {
-            alert("Incorrect PIN");
-            currentPin = "";
-            updateDots();
-        }
+        });
     });
 }
 
@@ -375,6 +387,7 @@ function openPreview(item, mediaUrl) {
     previewContainer.appendChild(el);
     previewModal.classList.remove("hidden");
 
+    // Push history state so Android back button closes preview instead of exiting app
     history.pushState({ previewOpen: true }, "");
 }
 
