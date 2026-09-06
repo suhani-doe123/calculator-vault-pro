@@ -22,21 +22,22 @@ body {
     display: none !important;
 }
 
-/* CALCULATOR SCREEN */
+/* CALCULATOR SCREEN - FIXED FOR ALL PHONES */
 .app {
     width: 100%;
     max-width: 400px;
     height: 100vh;
-    max-height: 850px;
-    padding: 12px 16px;
+    height: 100dvh;
+    padding: 10px 16px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
+    margin: auto;
 }
 
 .main-title {
-    font-size: 12px;
+    font-size: 11px;
     text-align: center;
     color: #8b949e;
     letter-spacing: 2px;
@@ -47,19 +48,19 @@ body {
 .display-card {
     text-align: right;
     margin-top: auto;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     padding: 4px 8px;
 }
 
 .small-display {
-    font-size: 16px;
+    font-size: 15px;
     color: #8b949e;
-    min-height: 22px;
+    min-height: 20px;
     letter-spacing: 1px;
 }
 
 .display {
-    font-size: 42px;
+    font-size: 38px;
     font-weight: 300;
     color: #ffffff;
     word-break: break-all;
@@ -69,18 +70,18 @@ body {
 .keys {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .key {
-    height: 54px;
+    height: 50px;
     border-radius: 50%;
     border: none;
     background: rgba(33, 38, 45, 0.8);
     backdrop-filter: blur(10px);
     color: #f0f6fc;
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 500;
     cursor: pointer;
     display: flex;
@@ -105,12 +106,19 @@ body {
     width: 100%;
     max-width: 420px;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 24px 20px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(circle at top left, #1a2332, #0d1117);
+    z-index: 50;
 }
 
 .pin-card {
@@ -122,27 +130,27 @@ body {
 }
 
 .lock-icon {
-    font-size: 48px;
-    margin-bottom: 10px;
+    font-size: 44px;
+    margin-bottom: 8px;
     filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.3));
 }
 
 .pin-card h2 {
     font-weight: 500;
-    font-size: 20px;
-    margin-bottom: 20px;
+    font-size: 18px;
+    margin-bottom: 16px;
     color: #c9d1d9;
 }
 
 .dots-container {
     display: flex;
-    gap: 16px;
-    margin-bottom: 36px;
+    gap: 14px;
+    margin-bottom: 28px;
 }
 
 .dot {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
     border: 2px solid #30363d;
     transition: all 0.2s ease;
@@ -157,20 +165,20 @@ body {
 .pin-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 14px;
     width: 100%;
-    max-width: 270px;
+    max-width: 260px;
 }
 
 .pin-key {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(22, 27, 34, 0.7);
     backdrop-filter: blur(10px);
     color: #fff;
-    font-size: 22px;
+    font-size: 20px;
     cursor: pointer;
     margin: 0 auto;
     display: flex;
@@ -186,23 +194,33 @@ body {
 }
 
 .forgot-pin {
-    margin-top: 28px;
+    margin-top: 24px;
     color: #58a6ff;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
 }
 
 /* VAULT SCREEN - RESPONSIVE FOR ALL PHONES */
+#vaultScreen {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(circle at top left, #1a2332, #0d1117);
+    z-index: 60;
+}
+
 .vault-container {
     width: 100%;
     max-width: 420px;
     margin: 0 auto;
-    padding: 14px 12px;
+    padding: 12px 10px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    min-height: 100vh;
+    gap: 10px;
+    height: 100vh;
+    height: 100dvh;
     overflow-y: auto;
 }
 
@@ -216,7 +234,7 @@ body {
 }
 
 .vault-header h2 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     color: #ffffff;
     display: flex;
@@ -237,7 +255,7 @@ body {
     background: rgba(33, 38, 45, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #c9d1d9;
-    padding: 6px 10px;
+    padding: 5px 9px;
     border-radius: 20px;
     cursor: pointer;
     font-size: 11px;
@@ -249,8 +267,8 @@ body {
     background: rgba(22, 27, 34, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(12px);
-    border-radius: 14px;
-    padding: 12px 14px;
+    border-radius: 12px;
+    padding: 10px 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
@@ -258,7 +276,7 @@ body {
 .storage-card .card-foot {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 11px;
     color: #8b949e;
 }
 
@@ -268,10 +286,10 @@ body {
 }
 
 .progress-bg {
-    height: 6px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 3px;
-    margin: 10px 0;
+    margin: 8px 0;
     overflow: hidden;
 }
 
@@ -292,13 +310,13 @@ body {
 }
 
 .upgrade-card h3 {
-    font-size: 14px;
+    font-size: 13px;
     margin-bottom: 2px;
     color: #ffffff;
 }
 
 .upgrade-card p {
-    font-size: 11px;
+    font-size: 10px;
     color: #8b949e;
 }
 
@@ -306,7 +324,7 @@ body {
     background: linear-gradient(135deg, #238636, #2ea043);
     color: #fff;
     border: none;
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 11px;
@@ -319,18 +337,18 @@ body {
 .tabs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 8px;
 }
 
 .tab-btn {
     width: 100%;
-    padding: 10px;
+    padding: 9px;
     background: rgba(33, 38, 45, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     color: #fff;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -352,8 +370,8 @@ body {
     background: transparent;
     border: none;
     color: #8b949e;
-    padding: 6px;
-    font-size: 12px;
+    padding: 5px;
+    font-size: 11px;
     font-weight: 500;
     border-radius: 7px;
     cursor: pointer;
@@ -373,6 +391,7 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     margin-top: 2px;
+    padding-bottom: 20px;
 }
 
 .media-item {
@@ -426,34 +445,34 @@ body {
     background: #161b22;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 18px;
-    padding: 24px 20px;
+    padding: 22px 18px;
     width: 100%;
-    max-width: 320px;
+    max-width: 310px;
     text-align: center;
     box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
 .modal-card h2 {
-    font-size: 18px;
+    font-size: 17px;
     margin-bottom: 6px;
 }
 
 .sub-text {
-    font-size: 12px;
+    font-size: 11px;
     color: #8b949e;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     line-height: 1.4;
 }
 
 .price-tag {
-    font-size: 32px;
+    font-size: 30px;
     font-weight: 700;
     color: #2ea043;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .price-tag small {
-    font-size: 13px;
+    font-size: 12px;
     color: #8b949e;
     font-weight: 400;
 }
@@ -461,13 +480,13 @@ body {
 .feature-list {
     text-align: left;
     list-style: none;
-    margin-bottom: 20px;
-    font-size: 12px;
+    margin-bottom: 18px;
+    font-size: 11px;
     color: #c9d1d9;
 }
 
 .feature-list li {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -486,11 +505,11 @@ body {
 }
 
 .pay-btn {
-    padding: 12px;
+    padding: 11px;
     border-radius: 10px;
     border: none;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
 }
 
@@ -517,9 +536,9 @@ body {
 
 .close-preview {
     position: absolute;
-    top: -32px;
+    top: -30px;
     right: 0;
-    font-size: 28px;
+    font-size: 26px;
     color: #fff;
     cursor: pointer;
 }
