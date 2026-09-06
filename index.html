@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Vault Pro</title>
-    <!-- MANIFEST LINK ADDED -->
+    <title>Vault Pro - Modern</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- CALCULATOR SCREEN -->
+
     <div class="app" id="calcApp">
-        <h1 class="main-title">CALCULATOR</h1>
+        <div class="header-badge">SECURE VAULT</div>
+        <h1 class="main-title">Calculator</h1>
 
         <div class="display-card">
             <div class="small-display" id="history"></div>
@@ -21,7 +22,7 @@
         <div class="keys">
             <button class="key btn-ac" data-key="clear">AC</button>
             <button class="key btn-del" data-key="delete">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
             </button>
             <button class="key btn-op" data-value="%">%</button>
             <button class="key btn-op" data-value="/">÷</button>
@@ -48,11 +49,10 @@
         </div>
     </div>
 
-    <!-- PIN SCREEN -->
     <div class="screen hidden" id="pinScreen">
         <div class="pin-card">
-            <div class="lock-icon">🔐</div>
-            <h2 id="pinScreenTitle">Enter PIN</h2>
+            <div class="lock-icon-glow">🔐</div>
+            <h2 id="pinScreenTitle">Enter Security PIN</h2>
             <div class="dots-container">
                 <span class="dot"></span>
                 <span class="dot"></span>
@@ -70,31 +70,29 @@
                 <button class="pin-key" data-pin="7">7</button>
                 <button class="pin-key" data-pin="8">8</button>
                 <button class="pin-key" data-pin="9">9</button>
-                <button class="pin-key" id="pinDelete">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                <button class="pin-key action-del" id="pinDelete">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
                 </button>
                 <button class="pin-key" data-pin="0">0</button>
-                <button class="pin-key" id="pinSubmit">✓</button>
+                <button class="pin-key action-submit" id="pinSubmit">✓</button>
             </div>
             <a href="#" class="forgot-pin">Forgot PIN?</a>
         </div>
     </div>
 
-    <!-- VAULT SCREEN -->
     <div class="screen hidden" id="vaultScreen">
         <div class="vault-container">
             <div class="vault-header">
-                <h2>🔐 My Vault</h2>
+                <h2>📁 My Secure Vault</h2>
                 <div class="header-actions">
-                    <button class="pill-btn" id="changePinBtn">🔑 ChangePIN</button>
-                    <button class="pill-btn" id="lockVault">🔒 Lock</button>
+                    <button class="pill-btn" id="changePinBtn">🔑 PIN</button>
+                    <button class="pill-btn danger" id="lockVault">🔒 Lock</button>
                 </div>
             </div>
 
-            <!-- STORAGE CARD -->
             <div class="card storage-card">
                 <div class="card-head">
-                    <span>Storage</span>
+                    <span>Storage Status</span>
                     <span class="highlight" id="storagePercent">0.0%</span>
                 </div>
                 <div class="progress-bg">
@@ -106,38 +104,32 @@
                 </div>
             </div>
 
-            <!-- UPGRADE CARD -->
             <div class="card upgrade-card">
                 <div>
                     <h3>Upgrade Storage</h3>
-                    <p id="upgradeSubText">10 GB Premium Space ($15/mo)</p>
+                    <p id="upgradeSubText">10 GB Premium Space</p>
                 </div>
                 <button class="btn-upgrade" id="openUpgradeModal">⭐ Upgrade</button>
             </div>
 
-            <!-- MAIN ACTION BUTTONS (DIRECT UPLOAD) -->
             <div class="tabs">
-                <button class="tab-btn" id="tabPhotos">🖼️ Photos</button>
-                <button class="tab-btn" id="tabVideos">🎥 Videos</button>
+                <button class="tab-btn primary-tab" id="tabPhotos">🖼️ Add Photos</button>
+                <button class="tab-btn primary-tab" id="tabVideos">🎥 Add Videos</button>
             </div>
 
-            <!-- SUB TABS (FILTERING) -->
             <div class="sub-tabs">
-                <button class="sub-tab active" id="subTabAll">All</button>
+                <button class="sub-tab active" id="subTabAll">All Files</button>
                 <button class="sub-tab" id="subTabPhotos">Photos</button>
                 <button class="sub-tab" id="subTabVideos">Videos</button>
             </div>
 
-            <!-- HIDDEN FILE INPUTS -->
             <input type="file" id="photoInput" accept="image/*" multiple class="hidden">
             <input type="file" id="videoInput" accept="video/*" multiple class="hidden">
 
-            <!-- MEDIA GALLERY GRID -->
             <div class="media-grid" id="mediaGrid"></div>
         </div>
     </div>
 
-    <!-- PREVIEW MODAL -->
     <div class="modal hidden" id="previewModal">
         <div class="modal-card preview-card">
             <span class="close-preview" id="closePreview">&times;</span>
@@ -145,22 +137,22 @@
         </div>
     </div>
 
-    <!-- UPGRADE / SUBSCRIBE MODAL POPUP -->
     <div class="modal hidden" id="upgradeModal">
-        <div class="modal-card">
-            <h2>👑 Calculator Pro Premium</h2>
-            <p class="sub-text">To change PIN or upgrade your storage to 10GB, subscribe to Premium.</p>
+        <div class="modal-card upgrade-popup">
+            <div class="crown-icon">👑</div>
+            <h2>Calculator Pro Premium</h2>
+            <p class="sub-text">Unlock custom PIN locks, 10GB secure cloud storage, and advanced protection.</p>
 
             <div class="price-tag">$15 <small>/ month</small></div>
 
             <ul class="feature-list">
-                <li>Change & Custom PIN Lock</li>
-                <li>10GB Cloud Storage</li>
-                <li>Enhanced Security</li>
+                <li>✨ Custom PIN Lock Security</li>
+                <li>🚀 10GB High-Speed Storage</li>
+                <li>🛡️ Encrypted Media Vault</li>
             </ul>
 
             <div class="payment-buttons">
-                <button class="pay-btn primary" id="confirmSubscribe">✨ Subscribe Now ($15/mo)</button>
+                <button class="pay-btn primary" id="confirmSubscribe">Subscribe Now</button>
                 <button class="pay-btn cancel" id="closeModal">Cancel</button>
             </div>
         </div>
