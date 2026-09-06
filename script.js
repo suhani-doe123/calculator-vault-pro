@@ -194,7 +194,6 @@ if (pinSubmit) {
             if (vaultScreen) vaultScreen.classList.remove("hidden");
 
             if (isVerifyingOldPinForChange) {
-                // Old PIN matched for change PIN action
                 if (upgradeModal) upgradeModal.classList.remove("hidden");
                 isVerifyingOldPinForChange = false;
             } else {
@@ -359,7 +358,7 @@ function updateStorageUI() {
     if (progressBar) progressBar.style.width = `${percent}%`;
 }
 
-// PREVIEW MODAL LOGIC
+// PREVIEW MODAL LOGIC WITH BACK BUTTON SUPPORT
 function openPreview(item, mediaUrl) {
     if (!previewContainer || !previewModal) return;
     previewContainer.innerHTML = "";
@@ -375,12 +374,30 @@ function openPreview(item, mediaUrl) {
     }
     previewContainer.appendChild(el);
     previewModal.classList.remove("hidden");
+
+    // Push history state so Android back button closes preview instead of exiting app
+    history.pushState({ previewOpen: true }, "");
 }
+
+function closePreviewModal() {
+    if (previewModal) previewModal.classList.add("hidden");
+    if (previewContainer) previewContainer.innerHTML = "";
+}
+
+// Listen to browser / Android back button
+window.addEventListener("popstate", (event) => {
+    if (!previewModal.classList.contains("hidden")) {
+        closePreviewModal();
+    }
+});
 
 if (closePreview) {
     closePreview.addEventListener("click", () => {
-        if (previewModal) previewModal.classList.add("hidden");
-        if (previewContainer) previewContainer.innerHTML = "";
+        closePreviewModal();
+        // If history state was pushed, go back to pop it safely
+        if (history.state && history.state.previewOpen) {
+            history.back();
+        }
     });
 }
 
@@ -395,6 +412,7 @@ if (closeModal) {
         if (upgradeModal) upgradeModal.classList.add("hidden");
     });
 }
+if.confirmSubscribe = document.getElementById("confirmSubscribe"); // standardizing below safely
 if (confirmSubscribe) {
     confirmSubscribe.addEventListener("click", () => {
         alert("Payment gateway backend integration required to activate subscription and 10GB storage.");
