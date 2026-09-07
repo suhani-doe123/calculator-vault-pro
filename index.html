@@ -1,158 +1,326 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator Pro</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-</head>
-<body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#08090d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Calculator Pro</title>
 
-    <!-- CALCULATOR APP SCREEN -->
-    <div id="calcApp" class="app-screen">
-        <div class="calculator">
-            <div class="display-screen">
-                <div id="history"></div>
-                <div id="display">0</div>
-            </div>
-            <div class="keypad">
-                <button class="key action" data-key="clear">C</button>
-                <button class="key action" data-key="sqrt">√</button>
-                <button class="key action" data-key="delete">⌫</button>
-                <button class="key operator" data-value="/">÷</button>
-                
-                <button class="key" data-value="7">7</button>
-                <button class="key" data-value="8">8</button>
-                <button class="key" data-value="9">9</button>
-                <button class="key operator" data-value="*">×</button>
-                
-                <button class="key" data-value="4">4</button>
-                <button class="key" data-value="5">5</button>
-                <button class="key" data-value="6">6</button>
-                <button class="key operator" data-value="-">-</button>
-                
-                <button class="key" data-value="1">1</button>
-                <button class="key" data-value="2">2</button>
-                <button class="key" data-value="3">3</button>
-                <button class="key operator" data-value="+">+</button>
-                
-                <button class="key zero" data-value="0">0</button>
-                <button class="key" data-value=".">.</button>
-                <button class="key equal" data-key="equal">=</button>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
+</head><body><!-- ================= CALCULATOR ================= -->
+<div id="calcApp" class="app-screen">
+
+    <div class="calculator">
+
+        <div class="app-brand">
+            <div class="brand-icon">✦</div>
+            <div>
+                <span>CALCULATOR</span>
+                <strong>PRO</strong>
             </div>
         </div>
-    </div>
 
-    <!-- PIN ENTRY SCREEN -->
-    <div id="pinScreen" class="app-screen hidden">
-        <div class="pin-container">
-            <h2 id="pinScreenTitle">Enter PIN</h2>
-            <div class="pin-dots">
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </div>
-            <div class="pin-pad">
-                <button class="pin-btn" data-pin="1">1</button>
-                <button class="pin-btn" data-pin="2">2</button>
-                <button class="pin-btn" data-pin="3">3</button>
-                <button class="pin-btn" data-pin="4">4</button>
-                <button class="pin-btn" data-pin="5">5</button>
-                <button class="pin-btn" data-pin="6">6</button>
-                <button class="pin-btn" data-pin="7">7</button>
-                <button class="pin-btn" data-pin="8">8</button>
-                <button class="pin-btn" data-pin="9">9</button>
-                <button class="pin-btn" id="pinDelete">⌫</button>
-                <button class="pin-btn" data-pin="0">0</button>
-                <button class="pin-btn submit" id="pinSubmit">✓</button>
-            </div>
-            <a href="#" class="forgot-pin">Forgot PIN?</a>
+        <div class="display-screen">
+            <div class="display-label">RESULT</div>
+            <div id="history"></div>
+            <div id="display">0</div>
         </div>
-    </div>
 
-    <!-- VAULT SCREEN -->
-    <div id="vaultScreen" class="app-screen hidden">
-        <header class="vault-header">
-            <div class="vault-title">
-                <span class="folder-icon">📁</span>
+        <div class="keypad">
+
+            <button class="key action" data-key="clear">C</button>
+            <button class="key action" data-key="sqrt">√</button>
+            <button class="key action" data-key="delete">⌫</button>
+            <button class="key operator" data-value="/">÷</button>
+
+            <button class="key" data-value="7">7</button>
+            <button class="key" data-value="8">8</button>
+            <button class="key" data-value="9">9</button>
+            <button class="key operator" data-value="*">×</button>
+
+            <button class="key" data-value="4">4</button>
+            <button class="key" data-value="5">5</button>
+            <button class="key" data-value="6">6</button>
+            <button class="key operator" data-value="-">−</button>
+
+            <button class="key" data-value="1">1</button>
+            <button class="key" data-value="2">2</button>
+            <button class="key" data-value="3">3</button>
+            <button class="key operator" data-value="+">+</button>
+
+            <button class="key zero" data-value="0">0</button>
+            <button class="key" data-value=".">.</button>
+            <button class="key equal" data-key="equal">=</button>
+
+        </div>
+
+        <div class="calculator-footer">
+            <span>Private Calculator</span>
+            <span>•</span>
+            <span>Secure</span>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ================= PIN SCREEN ================= -->
+<div id="pinScreen" class="app-screen hidden">
+
+    <div class="pin-container">
+
+        <div class="security-icon">
+            <div class="security-ring">🔐</div>
+        </div>
+
+        <span class="security-label">PRIVATE VAULT</span>
+
+        <h2 id="pinScreenTitle">Enter Secret PIN</h2>
+
+        <p class="pin-subtitle">
+            Enter your 4-digit PIN to continue
+        </p>
+
+        <div class="pin-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+
+        <div class="pin-pad">
+
+            <button class="pin-btn" data-pin="1">1</button>
+            <button class="pin-btn" data-pin="2">2</button>
+            <button class="pin-btn" data-pin="3">3</button>
+
+            <button class="pin-btn" data-pin="4">4</button>
+            <button class="pin-btn" data-pin="5">5</button>
+            <button class="pin-btn" data-pin="6">6</button>
+
+            <button class="pin-btn" data-pin="7">7</button>
+            <button class="pin-btn" data-pin="8">8</button>
+            <button class="pin-btn" data-pin="9">9</button>
+
+            <button class="pin-btn utility" id="pinDelete">⌫</button>
+            <button class="pin-btn" data-pin="0">0</button>
+            <button class="pin-btn submit" id="pinSubmit">✓</button>
+
+        </div>
+
+        <a href="#" class="forgot-pin">Forgot PIN?</a>
+
+    </div>
+</div>
+
+
+<!-- ================= VAULT ================= -->
+<div id="vaultScreen" class="app-screen hidden">
+
+    <header class="vault-header">
+
+        <div class="vault-title">
+
+            <div class="vault-logo">🔐</div>
+
+            <div class="vault-heading">
+                <span>PRIVATE</span>
                 <h2>My Secure Vault</h2>
             </div>
-            <div class="vault-actions">
-                <button id="changePinBtn" class="vault-btn">🔑 PIN</button>
-                <button id="lockVault" class="vault-btn lock">🔒 Lock</button>
-            </div>
-        </header>
 
-        <!-- STORAGE STATUS -->
-        <div class="storage-card">
-            <div class="storage-info">
-                <span>Storage Status</span>
-                <span id="storagePercent">0%</span>
+        </div>
+
+        <div class="vault-actions">
+            <button id="changePinBtn" class="vault-btn" aria-label="Change PIN">
+                🔑
+            </button>
+
+            <button id="lockVault" class="vault-btn lock" aria-label="Lock Vault">
+                🔒
+            </button>
+        </div>
+
+    </header>
+
+
+    <main class="vault-content">
+
+        <!-- STORAGE -->
+        <section class="storage-card">
+
+            <div class="storage-top">
+
+                <div class="storage-icon">☁</div>
+
+                <div class="storage-title">
+                    <span>STORAGE</span>
+                    <strong>Secure Space</strong>
+                </div>
+
+                <div id="storagePercent" class="storage-percent">
+                    0%
+                </div>
+
             </div>
+
             <div class="progress-bar-container">
                 <div id="progressBar" class="progress-bar"></div>
             </div>
+
             <div class="storage-details">
                 <span id="storageUsed">Used: 0 MB</span>
-                <span>Available: 1.00 GB</span>
+                <span>1.00 GB Available</span>
             </div>
-        </div>
 
-        <!-- UPGRADE BANNER -->
-        <div class="upgrade-banner" id="openUpgradeModal">
+        </section>
+
+
+        <!-- PREMIUM -->
+        <section class="upgrade-banner" id="openUpgradeModal">
+
+            <div class="premium-glow"></div>
+
+            <div class="upgrade-icon">
+                ★
+            </div>
+
             <div class="upgrade-text">
-                <h3>Upgrade Storage</h3>
-                <p>10 GB Premium Space</p>
+                <span class="premium-label">PREMIUM</span>
+                <h3>Upgrade your storage</h3>
+                <p>Get 10 GB of secure private space</p>
             </div>
-            <button class="upgrade-btn">⭐ Upgrade</button>
+
+            <button class="upgrade-btn">
+                Upgrade
+                <span>›</span>
+            </button>
+
+        </section>
+
+
+        <!-- UPLOAD -->
+        <div class="section-heading">
+            <span>ADD FILES</span>
+            <small>Private & Secure</small>
         </div>
 
-        <!-- UPLOAD BUTTONS -->
         <div class="upload-actions">
+
             <button id="tabPhotos" class="action-tab">
-                <span>🖼️</span> Add Photos
+                <span class="upload-icon">⌁</span>
+                <span>
+                    <strong>Photos</strong>
+                    <small>Add images</small>
+                </span>
+                <b>＋</b>
             </button>
+
             <button id="tabVideos" class="action-tab">
-                <span>🎬</span> Add Videos
+                <span class="upload-icon">▶</span>
+                <span>
+                    <strong>Videos</strong>
+                    <small>Add videos</small>
+                </span>
+                <b>＋</b>
             </button>
+
         </div>
 
-        <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
-        <input type="file" id="videoInput" accept="video/*" multiple style="display: none;">
 
-        <!-- MEDIA SUB-TABS -->
-        <div class="sub-tabs">
-            <button id="subTabAll" class="sub-tab active">All Files</button>
-            <button id="subTabPhotos" class="sub-tab">Photos</button>
-            <button id="subTabVideos" class="sub-tab">Videos</button>
+        <input type="file" id="photoInput" accept="image/*" multiple hidden>
+        <input type="file" id="videoInput" accept="video/*" multiple hidden>
+
+
+        <!-- FILTER -->
+        <div class="media-header">
+
+            <div>
+                <h3>My Files</h3>
+                <span>Private media collection</span>
+            </div>
+
+            <div class="sub-tabs">
+
+                <button id="subTabAll" class="sub-tab active">
+                    All
+                </button>
+
+                <button id="subTabPhotos" class="sub-tab">
+                    Photos
+                </button>
+
+                <button id="subTabVideos" class="sub-tab">
+                    Videos
+                </button>
+
+            </div>
+
         </div>
 
-        <!-- MEDIA GRID -->
-        <div id="mediaGrid" class="media-grid">
-            <!-- Dynamic files will appear here -->
-        </div>
+
+        <!-- MEDIA -->
+        <div id="mediaGrid" class="media-grid"></div>
+
+    </main>
+
+</div>
+
+
+<!-- ================= PREVIEW MODAL ================= -->
+<div id="previewModal" class="modal hidden">
+
+    <div class="modal-content">
+
+        <button id="closePreview" class="close-btn">
+            ×
+        </button>
+
+        <div id="previewContainer"></div>
+
     </div>
 
-    <!-- PREVIEW MODAL (FIXED) -->
-    <div id="previewModal" class="modal hidden">
-        <div class="modal-content">
-            <button id="closePreview" class="close-btn">&times;</button>
-            <div id="previewContainer"></div>
+</div>
+
+
+<!-- ================= UPGRADE MODAL ================= -->
+<div id="upgradeModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <div class="modal-icon">★</div>
+
+        <span class="modal-label">PREMIUM STORAGE</span>
+
+        <h2>Upgrade to Premium</h2>
+
+        <p>
+            Get 10GB secure storage for your private photos and videos.
+        </p>
+
+        <div class="premium-feature">
+            <span>✓</span>
+            <div>
+                <strong>10 GB Storage</strong>
+                <small>Private media storage</small>
+            </div>
         </div>
+
+        <button id="confirmSubscribe" class="primary-btn">
+            Subscribe Now
+        </button>
+
+        <button id="closeModal" class="secondary-btn">
+            Maybe Later
+        </button>
+
     </div>
 
-    <!-- UPGRADE MODAL -->
-    <div id="upgradeModal" class="modal hidden">
-        <div class="modal-card">
-            <h2>Upgrade to Premium</h2>
-            <p>Get 10GB secure storage for all your private photos and videos.</p>
-            <button id="confirmSubscribe" class="primary-btn">Subscribe Now</button>
-            <button id="closeModal" class="secondary-btn">Cancel</button>
-        </div>
-    </div>
+</div>
 
-    <script src="script.js"></script>
+
+<script src="script.js"></script>
+
 </body>
 </html>
