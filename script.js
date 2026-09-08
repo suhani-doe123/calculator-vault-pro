@@ -1978,7 +1978,7 @@ if (upgradeModal) {
 
 
 // ==========================================
-// SUBSCRIBE DEMO
+// SUBSCRIBE PREMIUM
 // ==========================================
 
 if (confirmSubscribeBtn) {
