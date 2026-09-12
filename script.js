@@ -77,7 +77,11 @@ let premiumActive =
     localStorage.getItem('premium_active') === 'true';
 
 
-// Premium activate ஆனாலும் 10GB ஆகாது
+// ==========================================
+// STORAGE LIMIT
+// Premium activate ஆனாலும் 1GB தான்
+// ==========================================
+
 const STORAGE_LIMIT_MB = 1024;
 
 
@@ -103,8 +107,7 @@ try {
 
     }
 
-}
-catch (error) {
+} catch (error) {
 
     console.error(
         'Could not load vault media:',
@@ -117,7 +120,7 @@ catch (error) {
 
 
 // ==========================================
-// TOAST MESSAGE
+// TOAST
 // ==========================================
 
 function showToast(message) {
@@ -215,7 +218,7 @@ function updatePremiumUI() {
         if (premiumBannerText) {
 
             premiumBannerText.textContent =
-                'PIN recovery active. Storage remains 1 GB.';
+                'Premium features active. Storage remains 1 GB.';
 
         }
 
@@ -226,9 +229,7 @@ function updatePremiumUI() {
 
         }
 
-    }
-
-    else {
+    } else {
 
         if (premiumBannerTitle) {
 
@@ -240,7 +241,7 @@ function updatePremiumUI() {
         if (premiumBannerText) {
 
             premiumBannerText.textContent =
-                'Premium account recovery and extra features.';
+                'Activate premium features.';
 
         }
 
@@ -257,7 +258,7 @@ function updatePremiumUI() {
 
 
 // ==========================================
-// CALCULATOR KEYPAD
+// CALCULATOR
 // ==========================================
 
 if (keypad) {
@@ -270,7 +271,6 @@ if (keypad) {
                 event.target.closest('.key');
 
             if (!key) return;
-
 
             const value =
                 key.dataset.value;
@@ -316,7 +316,6 @@ if (keypad) {
                 ];
 
 
-                // OPERATOR
                 if (
                     operators.includes(value)
                 ) {
@@ -329,10 +328,8 @@ if (keypad) {
 
                     }
 
-
                     const lastCharacter =
                         currentInput.slice(-1);
-
 
                     if (
                         operators.includes(
@@ -346,9 +343,7 @@ if (keypad) {
                                 -1
                             ) + value;
 
-                    }
-
-                    else {
+                    } else {
 
                         currentInput += value;
 
@@ -356,8 +351,6 @@ if (keypad) {
 
                 }
 
-
-                // DECIMAL
                 else if (
                     value === '.'
                 ) {
@@ -366,7 +359,6 @@ if (keypad) {
                         currentInput
                             .split(/[+\-*/]/)
                             .pop();
-
 
                     if (
                         !currentNumber.includes('.')
@@ -378,8 +370,6 @@ if (keypad) {
 
                 }
 
-
-                // NUMBER
                 else {
 
                     if (
@@ -388,9 +378,7 @@ if (keypad) {
 
                         currentInput = value;
 
-                    }
-
-                    else {
+                    } else {
 
                         currentInput += value;
 
@@ -430,9 +418,7 @@ if (keypad) {
 
                     currentInput = '0';
 
-                }
-
-                else {
+                } else {
 
                     currentInput =
                         currentInput.length > 1
@@ -448,7 +434,7 @@ if (keypad) {
 
 
             // ==================================
-            // SQUARE ROOT
+            // SQRT
             // ==================================
 
             else if (
@@ -459,7 +445,6 @@ if (keypad) {
 
                     const number =
                         Number(currentInput);
-
 
                     if (
                         !Number.isFinite(number) ||
@@ -472,19 +457,15 @@ if (keypad) {
 
                     }
 
-
                     calculationHistory =
                         `√(${currentInput})`;
-
 
                     currentInput =
                         String(
                             Math.sqrt(number)
                         );
 
-                }
-
-                catch (error) {
+                } catch (error) {
 
                     currentInput =
                         'Error';
@@ -505,15 +486,7 @@ if (keypad) {
 
                 // ==================================
                 // SECRET VAULT TRIGGER
-                // ==================================
-                //
-                // Example:
-                // PIN = 1234
-                //
-                // Calculator:
-                // 1234 =
-                //
-                // Then PIN screen opens
+                // PIN + =
                 // ==================================
 
                 if (
@@ -552,12 +525,10 @@ if (keypad) {
 
                     }
 
-
                     const result =
                         Function(
                             `"use strict"; return (${currentInput})`
                         )();
-
 
                     if (
                         !Number.isFinite(result)
@@ -569,17 +540,13 @@ if (keypad) {
 
                     }
 
-
                     calculationHistory =
                         currentInput + ' =';
-
 
                     currentInput =
                         String(result);
 
-                }
-
-                catch (error) {
+                } catch (error) {
 
                     currentInput =
                         'Error';
@@ -587,7 +554,6 @@ if (keypad) {
                 }
 
             }
-
 
             updateDisplay();
 
@@ -598,7 +564,7 @@ if (keypad) {
 
 
 // ==========================================
-// UPDATE CALCULATOR DISPLAY
+// UPDATE DISPLAY
 // ==========================================
 
 function updateDisplay() {
@@ -609,7 +575,6 @@ function updateDisplay() {
             currentInput;
 
     }
-
 
     if (historyDisplay) {
 
@@ -622,7 +587,7 @@ function updateDisplay() {
 
 
 // ==========================================
-// DOUBLE TAP DISPLAY
+// DOUBLE CLICK DISPLAY
 // ==========================================
 
 if (display) {
@@ -656,7 +621,7 @@ function openPinScreen(state) {
     showScreen(pinScreen);
 
 
-    // VERIFY PIN
+    // VERIFY
     if (
         state === 'verify'
     ) {
@@ -671,7 +636,7 @@ function openPinScreen(state) {
         if (pinDescription) {
 
             pinDescription.textContent =
-                'Enter your 4-digit security PIN to unlock your private vault.';
+                'Enter your 4-digit security PIN.';
 
         }
 
@@ -686,7 +651,7 @@ function openPinScreen(state) {
     }
 
 
-    // SET NEW PIN
+    // SET NEW
     else if (
         state === 'set_new'
     ) {
@@ -716,7 +681,7 @@ function openPinScreen(state) {
     }
 
 
-    // CONFIRM NEW PIN
+    // CONFIRM
     else if (
         state === 'confirm_new'
     ) {
@@ -731,7 +696,7 @@ function openPinScreen(state) {
         if (pinDescription) {
 
             pinDescription.textContent =
-                'Enter the same PIN again to confirm.';
+                'Enter the same PIN again.';
 
         }
 
@@ -764,7 +729,6 @@ if (pinPad) {
                 );
 
             if (!button) return;
-
 
             const pinValue =
                 button.dataset.pin;
@@ -823,7 +787,7 @@ if (pinPad) {
 
 
 // ==========================================
-// UPDATE PIN DOTS
+// UPDATE DOTS
 // ==========================================
 
 function updatePinDots() {
@@ -840,9 +804,7 @@ function updatePinDots() {
                     'filled'
                 );
 
-            }
-
-            else {
+            } else {
 
                 dot.classList.remove(
                     'filled'
@@ -876,7 +838,7 @@ function handlePinSubmit() {
 
 
     // ==================================
-    // VERIFY PIN
+    // VERIFY
     // ==================================
 
     if (
@@ -901,9 +863,7 @@ function handlePinSubmit() {
 
             updatePremiumUI();
 
-        }
-
-        else {
+        } else {
 
             showToast(
                 'Incorrect PIN'
@@ -919,7 +879,7 @@ function handlePinSubmit() {
 
 
     // ==================================
-    // SET NEW PIN
+    // SET NEW
     // ==================================
 
     else if (
@@ -937,7 +897,7 @@ function handlePinSubmit() {
 
 
     // ==================================
-    // CONFIRM NEW PIN
+    // CONFIRM NEW
     // ==================================
 
     else if (
@@ -951,12 +911,10 @@ function handlePinSubmit() {
             storedPin =
                 enteredPin;
 
-
             localStorage.setItem(
                 'vault_pin',
                 storedPin
             );
-
 
             enteredPin = '';
 
@@ -964,16 +922,13 @@ function handlePinSubmit() {
 
             updatePinDots();
 
-
             showToast(
                 'PIN changed successfully'
             );
 
-
             showScreen(
                 vaultScreen
             );
-
 
             renderVaultMedia();
 
@@ -981,9 +936,7 @@ function handlePinSubmit() {
 
             updatePremiumUI();
 
-        }
-
-        else {
+        } else {
 
             showToast(
                 'PINs do not match'
@@ -1004,8 +957,15 @@ function handlePinSubmit() {
 
 // ==========================================
 // FORGOT PIN
+// ==========================================
+//
 // IMPORTANT:
-// OLD PIN NEVER DISPLAYED
+// Forgot PIN click:
+// 1. PIN காட்டாது
+// 2. Reset screen open ஆகாது
+// 3. "Please Activate Pro" வரும்
+// 4. Pro modal open ஆகும்
+//
 // ==========================================
 
 if (forgotPinBtn) {
@@ -1017,31 +977,18 @@ if (forgotPinBtn) {
             event.preventDefault();
 
 
-            // Premium inactive
-            if (
-                !isPremiumActive()
-            ) {
+            showToast(
+                'Please Activate Pro'
+            );
 
-                if (upgradeModal) {
 
-                    upgradeModal.classList.remove(
-                        'hidden'
-                    );
+            if (upgradeModal) {
 
-                }
-
-                return;
+                upgradeModal.classList.remove(
+                    'hidden'
+                );
 
             }
-
-
-            // Premium active
-            // Reset only
-            // Never reveal old PIN
-
-            openPinScreen(
-                'set_new'
-            );
 
         }
     );
@@ -1050,7 +997,7 @@ if (forgotPinBtn) {
 
 
 // ==========================================
-// PIN BACK BUTTON
+// PIN BACK
 // ==========================================
 
 if (pinBackBtn) {
@@ -1075,9 +1022,7 @@ if (pinBackBtn) {
                     vaultScreen
                 );
 
-            }
-
-            else {
+            } else {
 
                 showScreen(
                     calcApp
@@ -1107,11 +1052,9 @@ if (lockVaultBtn) {
 
             enteredPin = '';
 
-
             updateDisplay();
 
             updatePinDots();
-
 
             showScreen(
                 calcApp
@@ -1144,7 +1087,7 @@ if (changePinBtn) {
 
 
 // ==========================================
-// PHOTO UPLOAD BUTTON
+// PHOTO BUTTON
 // ==========================================
 
 if (
@@ -1165,7 +1108,7 @@ if (
 
 
 // ==========================================
-// VIDEO UPLOAD BUTTON
+// VIDEO BUTTON
 // ==========================================
 
 if (
@@ -1228,7 +1171,7 @@ if (videoInput) {
 
 
 // ==========================================
-// HANDLE FILE UPLOAD
+// HANDLE FILES
 // ==========================================
 
 function handleFiles(
@@ -1238,7 +1181,6 @@ function handleFiles(
 
     const selectedFiles =
         Array.from(files);
-
 
     if (
         selectedFiles.length === 0
@@ -1253,7 +1195,6 @@ function handleFiles(
         function (file) {
 
 
-            // IMAGE CHECK
             if (
                 type === 'image' &&
                 !file.type.startsWith(
@@ -1266,7 +1207,6 @@ function handleFiles(
             }
 
 
-            // VIDEO CHECK
             if (
                 type === 'video' &&
                 !file.type.startsWith(
@@ -1280,7 +1220,7 @@ function handleFiles(
 
 
             // ==================================
-            // 1GB STORAGE LIMIT
+            // STORAGE CHECK
             // ==================================
 
             const currentBytes =
@@ -1369,22 +1309,17 @@ function handleFiles(
                             )
                         );
 
-                    }
-
-                    catch (error) {
+                    } catch (error) {
 
                         mediaFiles.pop();
 
-
                         showToast(
-                            'Browser storage is full. Delete some files first.'
+                            'Browser storage is full'
                         );
-
 
                         console.error(
                             error
                         );
-
 
                         return;
 
@@ -1402,7 +1337,7 @@ function handleFiles(
                 function () {
 
                     showToast(
-                        `Could not read ${file.name}`
+                        'Could not read file'
                     );
 
                 };
@@ -1433,7 +1368,7 @@ function handleFiles(
 
 
 // ==========================================
-// FILTER BUTTONS
+// FILTERS
 // ==========================================
 
 if (subTabAll) {
@@ -1557,7 +1492,7 @@ function setSubFilter(
 
 
 // ==========================================
-// RENDER VAULT MEDIA
+// RENDER MEDIA
 // ==========================================
 
 function renderVaultMedia() {
@@ -1590,7 +1525,6 @@ function renderVaultMedia() {
         );
 
 
-    // EMPTY STATE
     if (emptyState) {
 
         emptyState.style.display =
@@ -1610,7 +1544,6 @@ function renderVaultMedia() {
     }
 
 
-    // FILES
     filtered.forEach(
         function (item) {
 
@@ -1684,7 +1617,7 @@ function renderVaultMedia() {
             }
 
 
-            // DELETE BUTTON
+            // DELETE
             const deleteButton =
                 document.createElement(
                     'button'
@@ -1703,12 +1636,6 @@ function renderVaultMedia() {
                 '&times;';
 
 
-            deleteButton.setAttribute(
-                'aria-label',
-                'Delete file'
-            );
-
-
             deleteButton.addEventListener(
                 'click',
                 function (event) {
@@ -1718,7 +1645,7 @@ function renderVaultMedia() {
 
                     const shouldDelete =
                         confirm(
-                            'Delete this file from your vault?'
+                            'Delete this file?'
                         );
 
 
@@ -1746,7 +1673,6 @@ function renderVaultMedia() {
             );
 
 
-            // OPEN PREVIEW
             div.addEventListener(
                 'click',
                 function () {
@@ -1796,12 +1722,9 @@ function deleteMedia(id) {
             )
         );
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            'Could not update storage:',
             error
         );
 
@@ -1816,7 +1739,7 @@ function deleteMedia(id) {
 
 
 // ==========================================
-// STORAGE INFORMATION
+// STORAGE INFO
 // ==========================================
 
 function updateStorageInfo() {
@@ -1881,7 +1804,6 @@ function updateStorageInfo() {
     }
 
 
-    // ALWAYS 1GB
     if (storageTotal) {
 
         storageTotal.textContent =
@@ -1893,7 +1815,7 @@ function updateStorageInfo() {
 
 
 // ==========================================
-// OPEN PREVIEW
+// PREVIEW
 // ==========================================
 
 function openPreview(item) {
@@ -1915,7 +1837,6 @@ function openPreview(item) {
     let element;
 
 
-    // IMAGE
     if (
         item.type === 'image'
     ) {
@@ -1934,11 +1855,7 @@ function openPreview(item) {
             item.name ||
             'Vault image';
 
-    }
-
-
-    // VIDEO
-    else {
+    } else {
 
         element =
             document.createElement(
@@ -2022,7 +1939,7 @@ function closePreviewModal() {
 
 
 // ==========================================
-// PREVIEW CLOSE BUTTON
+// PREVIEW BUTTON
 // ==========================================
 
 if (closePreviewBtn) {
@@ -2036,7 +1953,7 @@ if (closePreviewBtn) {
 
 
 // ==========================================
-// PREVIEW OUTSIDE CLICK
+// PREVIEW OUTSIDE
 // ==========================================
 
 if (previewModal) {
@@ -2073,14 +1990,12 @@ if (
         'click',
         function () {
 
-
-            // Already Premium
             if (
                 isPremiumActive()
             ) {
 
                 showToast(
-                    'Pro+ already active. Storage remains 1 GB.'
+                    'Pro+ Already Active'
                 );
 
                 return;
@@ -2149,19 +2064,14 @@ if (upgradeModal) {
 
 
 // ==========================================
-// ACTIVATE PRO+
+// ACTIVATE PRO
 // ==========================================
 //
 // IMPORTANT:
 //
-// Pro+ activates:
-// ✓ PIN reset
-// ✓ Premium status
-//
-// DOES NOT activate:
-// ✗ 10GB storage
-//
-// Storage stays 1GB
+// Pro active ஆகும்
+// BUT
+// 10GB active ஆகாது
 //
 // ==========================================
 
@@ -2181,10 +2091,6 @@ if (confirmSubscribeBtn) {
             premiumActive = true;
 
 
-            // DO NOT CHANGE STORAGE_LIMIT_MB
-            // DO NOT ENABLE 10GB HERE
-
-
             if (upgradeModal) {
 
                 upgradeModal.classList.add(
@@ -2198,7 +2104,7 @@ if (confirmSubscribeBtn) {
 
 
             showToast(
-                'Pro+ activated. Storage remains 1 GB.'
+                'Pro+ Activated'
             );
 
         }
@@ -2208,7 +2114,7 @@ if (confirmSubscribeBtn) {
 
 
 // ==========================================
-// INITIAL APP SETUP
+// INITIAL SETUP
 // ==========================================
 
 updateDisplay();
