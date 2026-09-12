@@ -1,4 +1,4 @@
-const CACHE_NAME = "calculator-pro-v1.08.8"; // Version-update
+const CACHE_NAME = "calculator-pro-v1.08.9"; // Version-update
 
 const FILES = [
   "./",
