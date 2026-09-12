@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#080b12">
-
     <title>Calculator Pro</title>
-
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 
 <body>
@@ -85,7 +82,7 @@
 
     <main class="pin-page">
 
-        <button class="back-circle" type="button" onclick="location.reload()">
+        <button class="back-circle" type="button" id="pinBackBtn">
             ←
         </button>
 
@@ -97,7 +94,7 @@
 
         <h2 id="pinScreenTitle">Enter PIN</h2>
 
-        <p class="pin-description">
+        <p class="pin-description" id="pinDescription">
             Enter your 4-digit security PIN to unlock your private vault.
         </p>
 
@@ -122,15 +119,9 @@
             <button class="pin-btn" data-pin="8">8</button>
             <button class="pin-btn" data-pin="9">9</button>
 
-            <button class="pin-btn utility" id="pinDelete">
-                ⌫
-            </button>
-
+            <button class="pin-btn utility" id="pinDelete">⌫</button>
             <button class="pin-btn" data-pin="0">0</button>
-
-            <button class="pin-btn submit" id="pinSubmit">
-                ✓
-            </button>
+            <button class="pin-btn submit" id="pinSubmit">✓</button>
 
         </div>
 
@@ -150,8 +141,6 @@
 
     <main class="vault-app">
 
-        <!-- HEADER -->
-
         <header class="vault-header">
 
             <div class="vault-title">
@@ -169,17 +158,11 @@
 
             <div class="vault-actions">
 
-                <button
-                    id="changePinBtn"
-                    class="vault-icon-btn"
-                    title="Change PIN">
+                <button id="changePinBtn" class="vault-icon-btn" title="Change PIN">
                     🔑
                 </button>
 
-                <button
-                    id="lockVault"
-                    class="vault-icon-btn lock"
-                    title="Lock Vault">
+                <button id="lockVault" class="vault-icon-btn lock" title="Lock Vault">
                     🔒
                 </button>
 
@@ -188,23 +171,14 @@
         </header>
 
 
-        <!-- WELCOME -->
-
         <section class="welcome-card">
 
             <div>
-
-                <span class="welcome-badge">
-                    ENCRYPTED VAULT
-                </span>
-
+                <span class="welcome-badge">PRIVATE VAULT</span>
                 <h3>Your private space.</h3>
-
                 <p>
-                    Keep personal photos and videos protected
-                    inside your secure vault.
+                    Keep personal photos and videos inside your local vault.
                 </p>
-
             </div>
 
             <div class="security-art">
@@ -214,17 +188,12 @@
         </section>
 
 
-        <!-- STORAGE -->
-
         <section class="storage-card">
 
             <div class="storage-top">
 
                 <div>
-                    <span class="card-label">
-                        Storage
-                    </span>
-
+                    <span class="card-label">Storage</span>
                     <h3>Vault Storage</h3>
                 </div>
 
@@ -234,72 +203,47 @@
 
             </div>
 
-
             <div class="progress-bar-container">
-
-                <div
-                    id="progressBar"
-                    class="progress-bar">
-                </div>
-
+                <div id="progressBar" class="progress-bar"></div>
             </div>
 
-
             <div class="storage-details">
-
-                <span id="storageUsed">
-                    0 MB used
-                </span>
-
-                <span>
-                    1 GB total
-                </span>
-
+                <span id="storageUsed">0 MB used</span>
+                <span id="storageTotal">1 GB total</span>
             </div>
 
         </section>
 
 
-        <!-- PREMIUM -->
+        <section class="upgrade-banner" id="openUpgradeModal">
 
-        <section
-            class="upgrade-banner"
-            id="openUpgradeModal">
-
-            <div class="premium-icon">
-                ✦
-            </div>
+            <div class="premium-icon">✦</div>
 
             <div class="upgrade-text">
 
-                <span class="premium-label">
-                    CALCULATOR PRO+
-                </span>
+                <span class="premium-label">CALCULATOR PRO+</span>
 
-                <h3>Unlock 10 GB Storage</h3>
+                <h3 id="premiumBannerTitle">
+                    Unlock Pro+ Features
+                </h3>
 
-                <p>
-                    More space for your private memories.
+                <p id="premiumBannerText">
+                    Premium account recovery and extra features.
                 </p>
 
             </div>
 
-            <button class="upgrade-btn">
+            <button class="upgrade-btn" id="upgradeBtn">
                 Upgrade
             </button>
 
         </section>
 
 
-        <!-- QUICK ACTIONS -->
-
         <div class="section-heading">
 
             <div>
-                <span class="small-label">
-                    QUICK ACTIONS
-                </span>
-
+                <span class="small-label">QUICK ACTIONS</span>
                 <h3>Add to Vault</h3>
             </div>
 
@@ -308,131 +252,78 @@
 
         <div class="upload-actions">
 
-            <button
-                id="tabPhotos"
-                class="action-tab">
+            <button id="tabPhotos" class="action-tab">
 
-                <div class="action-icon photo-icon">
-                    🖼
-                </div>
+                <div class="action-icon photo-icon">🖼</div>
 
                 <div class="action-copy">
                     <strong>Photos</strong>
                     <span>Add private images</span>
                 </div>
 
-                <span class="action-arrow">
-                    +
-                </span>
+                <span class="action-arrow">+</span>
 
             </button>
 
 
-            <button
-                id="tabVideos"
-                class="action-tab">
+            <button id="tabVideos" class="action-tab">
 
-                <div class="action-icon video-icon">
-                    ▶
-                </div>
+                <div class="action-icon video-icon">▶</div>
 
                 <div class="action-copy">
                     <strong>Videos</strong>
                     <span>Add private videos</span>
                 </div>
 
-                <span class="action-arrow">
-                    +
-                </span>
+                <span class="action-arrow">+</span>
 
             </button>
 
         </div>
 
 
-        <input
-            type="file"
-            id="photoInput"
-            accept="image/*"
-            multiple
-            hidden>
+        <input type="file" id="photoInput" accept="image/*" multiple hidden>
+        <input type="file" id="videoInput" accept="video/*" multiple hidden>
 
-        <input
-            type="file"
-            id="videoInput"
-            accept="video/*"
-            multiple
-            hidden>
-
-
-        <!-- FILE SECTION -->
 
         <div class="files-heading">
 
             <div>
-
-                <span class="small-label">
-                    PRIVATE FILES
-                </span>
-
+                <span class="small-label">PRIVATE FILES</span>
                 <h3>Your Files</h3>
-
             </div>
 
         </div>
 
 
-        <!-- TABS -->
-
         <div class="sub-tabs">
 
-            <button
-                id="subTabAll"
-                class="sub-tab active">
+            <button id="subTabAll" class="sub-tab active">
                 All
             </button>
 
-            <button
-                id="subTabPhotos"
-                class="sub-tab">
+            <button id="subTabPhotos" class="sub-tab">
                 Photos
             </button>
 
-            <button
-                id="subTabVideos"
-                class="sub-tab">
+            <button id="subTabVideos" class="sub-tab">
                 Videos
             </button>
 
         </div>
 
 
-        <!-- MEDIA GRID -->
-
-        <div
-            id="mediaGrid"
-            class="media-grid">
-
-            <!-- Uploaded files appear here -->
-
-        </div>
+        <div id="mediaGrid" class="media-grid"></div>
 
 
-        <!-- EMPTY STATE -->
+        <div id="emptyState" class="empty-state">
 
-        <div
-            id="emptyState"
-            class="empty-state">
-
-            <div class="empty-icon">
-                🔐
-            </div>
+            <div class="empty-icon">🔐</div>
 
             <h3>Your vault is empty</h3>
 
             <p>
-                Add photos or videos to begin building your
-                private collection.
+                Add photos or videos to begin building your private collection.
             </p>
 
         </div>
@@ -445,21 +336,15 @@
 <!-- =========================
      PREVIEW MODAL
 ========================= -->
-<div
-    id="previewModal"
-    class="modal hidden">
+<div id="previewModal" class="modal hidden">
 
     <div class="preview-wrapper">
 
         <div class="preview-top">
 
-            <span>
-                Secure Preview
-            </span>
+            <span>Secure Preview</span>
 
-            <button
-                id="closePreview"
-                class="close-btn">
+            <button id="closePreview" class="close-btn">
                 ×
             </button>
 
@@ -473,71 +358,61 @@
 
 
 <!-- =========================
-     UPGRADE MODAL
+     PREMIUM MODAL
 ========================= -->
-<div
-    id="upgradeModal"
-    class="modal hidden">
+<div id="upgradeModal" class="modal hidden">
 
     <div class="modal-card premium-modal">
 
-        <div class="premium-modal-icon">
-            ✦
-        </div>
+        <div class="premium-modal-icon">✦</div>
 
         <span class="premium-label">
             CALCULATOR PRO+
         </span>
 
-        <h2>Upgrade Your Vault</h2>
+        <h2>Activate Calculator Pro+</h2>
 
         <p>
-            Increase your secure storage to
-            <strong>10 GB</strong> and keep more private
-            photos and videos protected.
+            Unlock premium account recovery and PIN reset.
+            <strong>10 GB storage is NOT included automatically.</strong>
         </p>
-
 
         <div class="premium-features">
 
             <div>
                 <span>✓</span>
-                10 GB Vault Storage
+                PIN Recovery & Reset
             </div>
 
             <div>
                 <span>✓</span>
-                Photo & Video Protection
+                Premium Vault Features
             </div>
 
             <div>
                 <span>✓</span>
-                Premium Vault Experience
+                Enhanced Privacy Options
             </div>
 
         </div>
 
-
-        <button
-            id="confirmSubscribe"
-            class="primary-btn">
-
-            Upgrade to Pro+
-
+        <button id="confirmSubscribe" class="primary-btn">
+            Activate Pro+
         </button>
 
-
-        <button
-            id="closeModal"
-            class="secondary-btn">
-
+        <button id="closeModal" class="secondary-btn">
             Maybe Later
-
         </button>
 
     </div>
 
 </div>
+
+
+<!-- =========================
+     TOAST
+========================= -->
+<div id="toast" class="toast hidden"></div>
 
 
 <script src="script.js"></script>
