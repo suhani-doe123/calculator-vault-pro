@@ -1,421 +1,3185 @@
+Today 1:04 PM
+Pasted text(5).txt
+Document
+enaku ina konjam differnt a venum spck editor la senjai. css, script send pannava super a venum
+
+ஆம் Chillu, கண்டிப்பா அனுப்புங்க 👍
+உங்க HTML structure பார்த்தேன் — Calculator + PIN Lock + Private Vault + Photo/Video storage setup already நல்ல base-ஆ இருக்கு.
+
+style.css + script.js இரண்டையும் அனுப்புங்க. நான் இதை SPCK Editor-க்கு suitable-ஆ இன்னும் different + premium + modern mobile-app feel வர மாதிரி improve பண்ணித் தரேன்.
+
+Glassmorphism UI, smooth animations, better calculator buttons, premium PIN screen, stylish vault cards, photo/video grid, modal animations, responsive mobile layout எல்லாம் சேர்த்து HTML + CSS + JS fully matching version குடுக்கலாம்.
+
+CSS, Script send pannunga 🔥
+
+Pasted text(6).txt
+Document
+Pasted text (2).txt
+Document
+
+Super Chillu — rendu files-um பார்த்தேன். 👍
+
+உங்க CSS already dark GitHub-style UI, responsive calculator, PIN screen, vault cards, media grid, modals எல்லாம் cover பண்ணுது.
+JS-ல calculator → secret PIN trigger → vault, PIN change, photo/video upload, filter, preview, delete, storage calculation எல்லாமே working structure-ஆ இருக்கு.
+
+நான் இதை same functionality-யை வைத்துக்கொண்டு completely different premium look-க்கு மாற்றலாம்:
+
+Calculator: iPhone-style / futuristic glass UI, animated gradient, bigger display, smooth button press.
+Secret PIN: Face-ID style lock animation + glowing PIN dots + wrong-PIN shake.
+Vault: Apple Photos மாதிரி clean gallery feel, bottom navigation, storage ring, floating + upload button.
+Photos/Videos: smooth opening animation + full-screen preview.
+Overall: SPCK mobile friendly, smooth animations, modern icons, no unnecessary heavy libraries.
+
+ஒரு முக்கியமான விஷயம்: இப்போ PIN localStorage-ல் save ஆகுது, default PIN 1234; media-வும் Data URL ஆக localStorage-ல் store ஆகுது. அதனால் UI-ல் “encrypted/secure vault” என்று காட்டினாலும் இது real encryption/security இல்லை.
+
+Next version-க்கு HTML + full new style.css + full new script.js மூன்றையும் ready-to-paste SPCK code-ஆ நான் செய்யலாம். Existing functionality break ஆகாமல், design மட்டும் semma premium & different-ஆ மாற்றுவோம்.
+
+and forget pin kaata koodadhu adha click panna premium active panna sollanum but 10gb auto active aaga koodadhu
+
+ஆம் Chillu, இது நல்ல flow. இப்படி மாற்றலாம்:
+
+Forgot PIN click பண்ணினா PIN காட்டவே கூடாது. அதற்கு பதிலா “Premium feature — activate Pro+ to recover/reset PIN” modal open ஆகணும்.
+
+அதே நேரம் Pro+ activate பண்ணினாலும் 10GB storage automatic-ஆ unlock ஆகக்கூடாது. Storage upgrade தனி action ஆக இருக்கட்டும்.
+
+உங்க script.js-ல இருக்கிற இந்த Forgot PIN code-ஐ remove பண்ணுங்க:
+
+if (forgotPinBtn) {
+
+    forgotPinBtn.addEventListener(
+        'click',
+        function (event) {
+
+            event.preventDefault();
+
+            alert(
+                'Default PIN is 1234'
+            );
+
+        }
+    );
+
+}
+
+இதற்கு பதிலா இதை போடுங்க:
+
+// ==========================================
+// FORGOT PIN - PREMIUM REQUIRED
+// ==========================================
+
+if (forgotPinBtn) {
+
+    forgotPinBtn.addEventListener(
+        'click',
+        function (event) {
+
+            event.preventDefault();
+
+            const isPremium =
+                localStorage.getItem('premium_active') === 'true';
+
+            // NOT PREMIUM
+            if (!isPremium) {
+
+                if (upgradeModal) {
+
+                    upgradeModal.classList.remove('hidden');
+
+                }
+
+                return;
+            }
+
+
+            // PREMIUM ACTIVE
+            // Allow user to RESET PIN
+            openPinScreen('set_new');
+
+        }
+    );
+
+}
+
+இப்போ confirmSubscribeBtn code-யும் மாற்றணும்.
+
+இருக்கிற:
+
+if (confirmSubscribeBtn) {
+
+    confirmSubscribeBtn.addEventListener(
+        'click',
+        function () {
+
+            alert(
+                'Thank you for upgrading! Demo Mode'
+            );
+
+            if (upgradeModal) {
+
+                upgradeModal.classList.add(
+                    'hidden'
+                );
+
+            }
+
+        }
+    );
+
+}
+
+இதற்கு பதிலா:
+
+// ==========================================
+// ACTIVATE PREMIUM
+// ==========================================
+
+if (confirmSubscribeBtn) {
+
+    confirmSubscribeBtn.addEventListener(
+        'click',
+        function () {
+
+            // Activate premium account features only
+            localStorage.setItem(
+                'premium_active',
+                'true'
+            );
+
+
+            alert(
+                'Pro+ activated successfully!'
+            );
+
+
+            if (upgradeModal) {
+
+                upgradeModal.classList.add(
+                    'hidden'
+                );
+
+            }
+
+        }
+    );
+
+}
+
+முக்கியம் — 10GB auto active ஆகாது
+
+உங்க storage calculation-ல இப்போ:
+
+const maxMb = 1024;
+
+இதை அப்படியே வைத்திருங்க.
+
+அதாவது:
+
+const maxMb = 1024;
+
+Premium activate ஆனாலும் இது 10240 ஆக மாற்றப்படாது.
+
+Flow:
+
+Forgot PIN
+    ↓
+Premium இல்லையா?
+    ↓
+Pro+ Activation Modal
+    ↓
+Activate Pro+
+    ↓
+Premium Active ✅
+Storage = இன்னும் 1GB ✅
+    ↓
+Forgot PIN மீண்டும் click
+    ↓
+Set New PIN
+    ↓
+Confirm New PIN
+    ↓
+PIN Reset ✅
+
+மேலும் HTML-ல் தற்போது இருக்கும்:
+
+<h3>Unlock 10 GB Storage</h3>
+
+இதையும் மாற்றுவது நல்லது. இல்லனா user Premium activate செய்தவுடன் 10GB கிடைக்கும் என்று நினைப்பார்.
+
+இதுபோல வைக்கலாம்:
+
+<h3>Unlock Pro+ Features</h3>
+
+<p>
+    Access premium security and account recovery features.
+</p>
+
+Premium modal-லயும்:
+
+<h2>Upgrade Your Vault</h2>
+
+இதற்குப் பதிலா:
+
+<h2>Activate Calculator Pro+</h2>
+
+Features:
+
+<div class="premium-features">
+
+    <div>
+        <span>✓</span>
+        PIN Recovery & Reset
+    </div>
+
+    <div>
+        <span>✓</span>
+        Premium Vault Features
+    </div>
+
+    <div>
+        <span>✓</span>
+        Enhanced Privacy Options
+    </div>
+
+</div>
+
+அப்போ Premium subscription மற்றும் 10GB storage upgrade இரண்டும் completely separate ஆக இருக்கும். இது clean-ஆவும் logical-ஆவும் இருக்கும்.
+
+ஆம் Chillu, photo/video local storage-லவே வைக்கலாம்.
+
+ஆனா ஒரு முக்கியமான point: browser localStorage usually பெரிய photo/video files handle பண்ணாது. Few MB-க்கு மேலே quota full ஆகிடும். APK/WebView use பண்ணுறீங்கன்னா IndexedDB local storage தான் better — அது device-ல local-ஆவே save ஆகும், internet வேண்டாம், photos/videos keep பண்ணலாம்.
+
+உங்களுக்கு வேண்டிய final setup இதுதான்:
+
+    Photos + videos → device local storage / IndexedDB
+
+    PIN → local-ஆ save பண்ணலாம், but plain text இல்லாமல் better hash/encrypt
+
+    Forgot PIN → $15/month Premium Required
+
+    Premium → payment verify ஆன பிறகுதான் active
+
+    10GB → separate upgrade; Premium வாங்கினா auto 10GB கிடைக்காது
+
+    No cloud upload unless you specifically add it
+
+நீங்க விரும்பினா next message-ல நான் full script.js-ஐ IndexedDB photo/video local storage version-ஆ மாற்றி direct copy-paste code தர்றேன்.
+
+ok
+
+Super Chillu. Next version-la photo/video IndexedDB local storage-la save ஆகுற மாதிரி மாற்றலாம்; internet இல்லாமலும் local-a இருக்கும்.
+
+Forgot PIN → Premium Required – $15/month
+Premium → payment verify ஆன பிறகுதான் active
+10GB → separate upgrade, auto unlock ஆகாது.
+
+நீங்க readyனா full script.js direct copy-paste format-la தர்றேன்.
+
+ready
+
+Ready Chillu. இந்த version-ல photo/video IndexedDB local storage-ல் save ஆகும். localStorage-ல் media வைக்காது. Forgot PIN click பண்ணினா $15/month Premium Required modal மட்டும் வரும்; button click பண்ணினாலே Premium activate ஆகாது. Premium status backend/payment verification successful ஆன பிறகுதான் active ஆகும்.
+
+script.js முழுசையும் replace பண்ணுங்க:
+
+// ============================================================
+// CALCULATOR PRO - FULL SCRIPT
+// IndexedDB Local Media Storage
+// Premium PIN Recovery = $15/month
+// Premium does NOT automatically unlock 10GB
+// ============================================================
+
+
+// ============================================================
+// DOM ELEMENTS
+// ============================================================
+
+const calcApp = document.getElementById('calcApp');
+const pinScreen = document.getElementById('pinScreen');
+const vaultScreen = document.getElementById('vaultScreen');
+
+const display = document.getElementById('display');
+const historyDisplay = document.getElementById('history');
+const keypad = document.querySelector('.keypad');
+
+const pinDots = document.querySelectorAll('.dot');
+const pinPad = document.querySelector('.pin-pad');
+
+const pinScreenTitle = document.getElementById('pinScreenTitle');
+const pinDescription = document.getElementById('pinDescription');
+
+const forgotPinBtn = document.querySelector('.forgot-pin');
+const pinBackBtn = document.getElementById('pinBackBtn');
+
+const lockVaultBtn = document.getElementById('lockVault');
+const changePinBtn = document.getElementById('changePinBtn');
+
+const tabPhotos = document.getElementById('tabPhotos');
+const tabVideos = document.getElementById('tabVideos');
+
+const photoInput = document.getElementById('photoInput');
+const videoInput = document.getElementById('videoInput');
+
+const subTabAll = document.getElementById('subTabAll');
+const subTabPhotos = document.getElementById('subTabPhotos');
+const subTabVideos = document.getElementById('subTabVideos');
+
+const mediaGrid = document.getElementById('mediaGrid');
+const emptyState = document.getElementById('emptyState');
+
+const storagePercent = document.getElementById('storagePercent');
+const progressBar = document.getElementById('progressBar');
+const storageUsed = document.getElementById('storageUsed');
+const storageTotal = document.getElementById('storageTotal');
+
+const previewModal = document.getElementById('previewModal');
+const closePreviewBtn = document.getElementById('closePreview');
+const previewContainer = document.getElementById('previewContainer');
+
+const upgradeModal = document.getElementById('upgradeModal');
+const openUpgradeModal = document.getElementById('openUpgradeModal');
+const closeModalBtn = document.getElementById('closeModal');
+const confirmSubscribeBtn = document.getElementById('confirmSubscribe');
+
+const premiumBannerTitle = document.getElementById('premiumBannerTitle');
+const premiumBannerText = document.getElementById('premiumBannerText');
+const upgradeBtn = document.getElementById('upgradeBtn');
+
+const toast = document.getElementById('toast');
+
+
+// ============================================================
+// APP SETTINGS
+// ============================================================
+
+// FREE STORAGE DISPLAY LIMIT
+// Premium does NOT change this automatically.
+const FREE_STORAGE_LIMIT_MB = 1024;
+
+// Separate 10GB purchase flag.
+// Do NOT activate this from Premium subscription.
+let storage10GBActive =
+    localStorage.getItem('storage_10gb_active') === 'true';
+
+function getStorageLimitMB() {
+
+    return storage10GBActive
+        ? 10240
+        : FREE_STORAGE_LIMIT_MB;
+}
+
+
+// ============================================================
+// PIN SETTINGS
+// ============================================================
+
+let storedPin =
+    localStorage.getItem('vault_pin') || '1234';
+
+let enteredPin = '';
+let tempNewPin = '';
+let pinState = 'verify';
+
+
+// ============================================================
+// CALCULATOR STATE
+// ============================================================
+
+let currentInput = '0';
+let calculationHistory = '';
+
+
+// ============================================================
+// MEDIA STATE
+// ============================================================
+
+let mediaFiles = [];
+let activeSubFilter = 'all';
+
+
+// ============================================================
+// PREMIUM STATE
+// ============================================================
+
+// IMPORTANT:
+//
+// Do not manually set:
+//
+// localStorage.setItem('premium_active', 'true')
+//
+// from Subscribe button.
+//
+// Premium should only become active after payment/server
+// verification.
+//
+// This local value is only a cached verified entitlement.
+let premiumActive =
+    localStorage.getItem('premium_verified') === 'true';
+
+
+// ============================================================
+// INDEXEDDB SETTINGS
+// ============================================================
+
+const DB_NAME = 'CalculatorProVault';
+const DB_VERSION = 1;
+const STORE_NAME = 'media';
+
+let vaultDB = null;
+
+
+// ============================================================
+// TOAST
+// ============================================================
+
+function showToast(message) {
+
+    if (!toast) {
+
+        alert(message);
+        return;
+    }
+
+    toast.textContent = message;
+
+    toast.classList.remove('hidden');
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(() => {
+
+        toast.classList.add('hidden');
+
+    }, 2300);
+}
+
+
+// ============================================================
+// SCREEN SWITCH
+// ============================================================
+
+function showScreen(screen) {
+
+    [
+        calcApp,
+        pinScreen,
+        vaultScreen
+    ].forEach(item => {
+
+        if (item) {
+            item.classList.add('hidden');
+        }
+
+    });
+
+    if (screen) {
+        screen.classList.remove('hidden');
+    }
+}
+
+
+// ============================================================
+// OPEN INDEXEDDB
+// ============================================================
+
+function openVaultDatabase() {
+
+    return new Promise((resolve, reject) => {
+
+        const request =
+            indexedDB.open(
+                DB_NAME,
+                DB_VERSION
+            );
+
+        request.onupgradeneeded = event => {
+
+            const db =
+                event.target.result;
+
+            if (
+                !db.objectStoreNames.contains(
+                    STORE_NAME
+                )
+            ) {
+
+                const store =
+                    db.createObjectStore(
+                        STORE_NAME,
+                        {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        }
+                    );
+
+                store.createIndex(
+                    'type',
+                    'type',
+                    {
+                        unique: false
+                    }
+                );
+
+                store.createIndex(
+                    'createdAt',
+                    'createdAt',
+                    {
+                        unique: false
+                    }
+                );
+            }
+        };
+
+        request.onsuccess = event => {
+
+            vaultDB =
+                event.target.result;
+
+            resolve(vaultDB);
+        };
+
+        request.onerror = event => {
+
+            console.error(
+                'IndexedDB open error:',
+                event.target.error
+            );
+
+            reject(
+                event.target.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// ADD MEDIA TO INDEXEDDB
+// ============================================================
+
+function addMediaToDB(file, type) {
+
+    return new Promise((resolve, reject) => {
+
+        if (!vaultDB) {
+
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
+
+            return;
+        }
+
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readwrite'
+            );
+
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
+
+        const record = {
+
+            name:
+                file.name,
+
+            type:
+                type,
+
+            mimeType:
+                file.type,
+
+            size:
+                file.size,
+
+            blob:
+                file,
+
+            createdAt:
+                Date.now()
+        };
+
+        const request =
+            store.add(record);
+
+        request.onsuccess = () => {
+
+            resolve(
+                request.result
+            );
+        };
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// GET ALL MEDIA
+// ============================================================
+
+function getAllMediaFromDB() {
+
+    return new Promise((resolve, reject) => {
+
+        if (!vaultDB) {
+
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
+
+            return;
+        }
+
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readonly'
+            );
+
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
+
+        const request =
+            store.getAll();
+
+        request.onsuccess = () => {
+
+            resolve(
+                request.result || []
+            );
+        };
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// DELETE MEDIA FROM INDEXEDDB
+// ============================================================
+
+function deleteMediaFromDB(id) {
+
+    return new Promise((resolve, reject) => {
+
+        if (!vaultDB) {
+
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
+
+            return;
+        }
+
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readwrite'
+            );
+
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
+
+        const request =
+            store.delete(id);
+
+        request.onsuccess = () => {
+
+            resolve();
+        };
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// LOAD MEDIA
+// ============================================================
+
+async function loadMediaFiles() {
+
+    try {
+
+        mediaFiles =
+            await getAllMediaFromDB();
+
+        mediaFiles.sort(
+            (a, b) =>
+                b.createdAt -
+                a.createdAt
+        );
+
+        renderVaultMedia();
+        updateStorageInfo();
+
+    } catch (error) {
+
+        console.error(
+            'Load media error:',
+            error
+        );
+
+        showToast(
+            'Could not load local media'
+        );
+    }
+}
+
+
+// ============================================================
+// CALCULATOR
+// ============================================================
+
+if (keypad) {
+
+    keypad.addEventListener(
+        'click',
+        function (event) {
+
+            const key =
+                event.target.closest('.key');
+
+            if (!key) return;
+
+            const value =
+                key.dataset.value;
+
+            const keyType =
+                key.dataset.key;
+
+
+            if (
+                currentInput === 'Error' &&
+                value !== undefined
+            ) {
+
+                currentInput =
+                    value === '.'
+                        ? '0.'
+                        : value;
+
+                calculationHistory = '';
+
+                updateDisplay();
+
+                return;
+            }
+
+
+            // VALUE
+            if (value !== undefined) {
+
+                const operators = [
+                    '+',
+                    '-',
+                    '*',
+                    '/'
+                ];
+
+
+                if (
+                    operators.includes(value)
+                ) {
+
+                    const last =
+                        currentInput.slice(-1);
+
+                    if (
+                        operators.includes(last)
+                    ) {
+
+                        currentInput =
+                            currentInput.slice(
+                                0,
+                                -1
+                            ) + value;
+
+                    } else {
+
+                        currentInput += value;
+                    }
+
+                }
+
+
+                else if (
+                    value === '.'
+                ) {
+
+                    const part =
+                        currentInput
+                            .split(
+                                /[+\-*/]/
+                            )
+                            .pop();
+
+                    if (
+                        !part.includes('.')
+                    ) {
+
+                        currentInput += '.';
+                    }
+
+                }
+
+
+                else {
+
+                    if (
+                        currentInput === '0'
+                    ) {
+
+                        currentInput =
+                            value;
+
+                    } else {
+
+                        currentInput +=
+                            value;
+                    }
+                }
+            }
+
+
+            // CLEAR
+            else if (
+                keyType === 'clear'
+            ) {
+
+                currentInput = '0';
+                calculationHistory = '';
+            }
+
+
+            // DELETE
+            else if (
+                keyType === 'delete'
+            ) {
+
+                currentInput =
+                    currentInput.length > 1
+                        ? currentInput.slice(
+                            0,
+                            -1
+                        )
+                        : '0';
+            }
+
+
+            // SQRT
+            else if (
+                keyType === 'sqrt'
+            ) {
+
+                const number =
+                    Number(currentInput);
+
+                if (
+                    Number.isFinite(number) &&
+                    number >= 0
+                ) {
+
+                    calculationHistory =
+                        `√(${currentInput})`;
+
+                    currentInput =
+                        String(
+                            Math.sqrt(number)
+                        );
+
+                } else {
+
+                    currentInput =
+                        'Error';
+                }
+            }
+
+
+            // EQUAL
+            else if (
+                keyType === 'equal'
+            ) {
+
+
+                // SECRET VAULT TRIGGER
+
+                if (
+                    currentInput === storedPin
+                ) {
+
+                    currentInput = '0';
+
+                    calculationHistory = '';
+
+                    updateDisplay();
+
+                    openPinScreen(
+                        'verify'
+                    );
+
+                    return;
+                }
+
+
+                try {
+
+                    if (
+                        !/^[0-9+\-*/.() ]+$/
+                            .test(currentInput)
+                    ) {
+
+                        throw new Error(
+                            'Invalid expression'
+                        );
+                    }
+
+                    const result =
+                        Function(
+                            `"use strict"; return (${currentInput})`
+                        )();
+
+                    if (
+                        !Number.isFinite(result)
+                    ) {
+
+                        throw new Error(
+                            'Invalid result'
+                        );
+                    }
+
+                    calculationHistory =
+                        currentInput + ' =';
+
+                    currentInput =
+                        String(result);
+
+                } catch (error) {
+
+                    currentInput =
+                        'Error';
+                }
+            }
+
+
+            updateDisplay();
+        }
+    );
+}
+
+
+// ============================================================
+// UPDATE DISPLAY
+// ============================================================
+
+function updateDisplay() {
+
+    if (display) {
+
+        display.textContent =
+            currentInput;
+    }
+
+    if (historyDisplay) {
+
+        historyDisplay.textContent =
+            calculationHistory;
+    }
+}
+
+
+// ============================================================
+// DOUBLE CLICK DISPLAY
+// ============================================================
+
+if (display) {
+
+    display.addEventListener(
+        'dblclick',
+        () => {
+
+            openPinScreen(
+                'verify'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// OPEN PIN SCREEN
+// ============================================================
+
+function openPinScreen(state) {
+
+    pinState = state;
+
+    enteredPin = '';
+
+    updatePinDots();
+
+    showScreen(
+        pinScreen
+    );
+
+
+    if (
+        state === 'verify'
+    ) {
+
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Enter Secret PIN';
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter your 4-digit security PIN.';
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.remove(
+                'hidden'
+            );
+        }
+    }
+
+
+    else if (
+        state === 'set_new'
+    ) {
+
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Set New PIN';
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter your new 4-digit PIN.';
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.add(
+                'hidden'
+            );
+        }
+    }
+
+
+    else if (
+        state === 'confirm_new'
+    ) {
+
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Confirm New PIN';
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter the same PIN again.';
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.add(
+                'hidden'
+            );
+        }
+    }
+}
+
+
+// ============================================================
+// PIN KEYPAD
+// ============================================================
+
+if (pinPad) {
+
+    pinPad.addEventListener(
+        'click',
+        function (event) {
+
+            const button =
+                event.target.closest(
+                    '.pin-btn'
+                );
+
+            if (!button) return;
+
+            const number =
+                button.dataset.pin;
+
+
+            if (
+                number !== undefined
+            ) {
+
+                if (
+                    enteredPin.length < 4
+                ) {
+
+                    enteredPin +=
+                        number;
+
+                    updatePinDots();
+                }
+            }
+
+
+            else if (
+                button.id ===
+                'pinDelete'
+            ) {
+
+                enteredPin =
+                    enteredPin.slice(
+                        0,
+                        -1
+                    );
+
+                updatePinDots();
+            }
+
+
+            else if (
+                button.id ===
+                'pinSubmit'
+            ) {
+
+                handlePinSubmit();
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// UPDATE PIN DOTS
+// ============================================================
+
+function updatePinDots() {
+
+    pinDots.forEach(
+        (dot, index) => {
+
+            if (
+                index <
+                enteredPin.length
+            ) {
+
+                dot.classList.add(
+                    'filled'
+                );
+
+            } else {
+
+                dot.classList.remove(
+                    'filled'
+                );
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// PIN SUBMIT
+// ============================================================
+
+async function handlePinSubmit() {
+
+    if (
+        enteredPin.length !== 4
+    ) {
+
+        showToast(
+            'Enter all 4 digits'
+        );
+
+        return;
+    }
+
+
+    // VERIFY
+    if (
+        pinState === 'verify'
+    ) {
+
+        if (
+            enteredPin === storedPin
+        ) {
+
+            enteredPin = '';
+
+            updatePinDots();
+
+            showScreen(
+                vaultScreen
+            );
+
+            await loadMediaFiles();
+
+            updatePremiumUI();
+
+        } else {
+
+            showToast(
+                'Incorrect PIN'
+            );
+
+            enteredPin = '';
+
+            updatePinDots();
+        }
+    }
+
+
+    // SET NEW PIN
+    else if (
+        pinState === 'set_new'
+    ) {
+
+        tempNewPin =
+            enteredPin;
+
+        openPinScreen(
+            'confirm_new'
+        );
+    }
+
+
+    // CONFIRM NEW PIN
+    else if (
+        pinState ===
+        'confirm_new'
+    ) {
+
+        if (
+            enteredPin ===
+            tempNewPin
+        ) {
+
+            storedPin =
+                enteredPin;
+
+            localStorage.setItem(
+                'vault_pin',
+                storedPin
+            );
+
+            enteredPin = '';
+            tempNewPin = '';
+
+            updatePinDots();
+
+            showToast(
+                'PIN changed successfully'
+            );
+
+            showScreen(
+                vaultScreen
+            );
+
+            await loadMediaFiles();
+
+        } else {
+
+            showToast(
+                'PINs do not match'
+            );
+
+            tempNewPin = '';
+
+            openPinScreen(
+                'set_new'
+            );
+        }
+    }
+}
+
+
+// ============================================================
+// FORGOT PIN
+// ============================================================
+//
+// FREE USER:
+//
+// Forgot PIN
+//     ↓
+// Premium Required
+// $15 / month
+//
+// DO NOT reveal PIN.
+//
+// DO NOT automatically activate Premium.
+//
+// ============================================================
+
+if (forgotPinBtn) {
+
+    forgotPinBtn.addEventListener(
+        'click',
+        function (event) {
+
+            event.preventDefault();
+
+
+            // Verified Premium User
+            if (
+                isPremiumVerified()
+            ) {
+
+                openPinScreen(
+                    'set_new'
+                );
+
+                return;
+            }
+
+
+            // Free user
+            showToast(
+                'Premium Required - $15/month'
+            );
+
+            openPremiumModal();
+        }
+    );
+}
+
+
+// ============================================================
+// PREMIUM VERIFIED CHECK
+// ============================================================
+
+function isPremiumVerified() {
+
+    return (
+        localStorage.getItem(
+            'premium_verified'
+        ) === 'true'
+    );
+}
+
+
+// ============================================================
+// OPEN PREMIUM MODAL
+// ============================================================
+
+function openPremiumModal() {
+
+    if (!upgradeModal) {
+
+        showToast(
+            'Premium Required - $15/month'
+        );
+
+        return;
+    }
+
+    upgradeModal.classList.remove(
+        'hidden'
+    );
+}
+
+
+// ============================================================
+// PREMIUM UI
+// ============================================================
+
+function updatePremiumUI() {
+
+    premiumActive =
+        isPremiumVerified();
+
+
+    if (premiumActive) {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Premium Active';
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                'PIN Recovery active. Storage plan is separate.';
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                'Active';
+        }
+
+    } else {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Calculator Pro Premium';
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                '$15/month • PIN Recovery & Premium Features';
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                '$15 / Month';
+        }
+    }
+}
+
+
+// ============================================================
+// OPEN PREMIUM BUTTON
+// ============================================================
+
+if (openUpgradeModal) {
+
+    openUpgradeModal.addEventListener(
+        'click',
+        function () {
+
+            if (
+                isPremiumVerified()
+            ) {
+
+                showToast(
+                    'Premium already active'
+                );
+
+                return;
+            }
+
+            openPremiumModal();
+        }
+    );
+}
+
+
+// ============================================================
+// CLOSE PREMIUM MODAL
+// ============================================================
+
+if (
+    closeModalBtn &&
+    upgradeModal
+) {
+
+    closeModalBtn.addEventListener(
+        'click',
+        function () {
+
+            upgradeModal.classList.add(
+                'hidden'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// SUBSCRIBE BUTTON
+// ============================================================
+//
+// IMPORTANT:
+//
+// THIS BUTTON MUST NOT:
+//
+// localStorage.setItem(
+//     'premium_verified',
+//     'true'
+// );
+//
+// Premium must only be activated after real payment
+// verification.
+//
+// Replace PAYMENT_URL with your payment / Play Store flow.
+//
+// ============================================================
+
+if (confirmSubscribeBtn) {
+
+    confirmSubscribeBtn.addEventListener(
+        'click',
+        function () {
+
+            startPremiumSubscription();
+        }
+    );
+}
+
+
+// ============================================================
+// START PREMIUM SUBSCRIPTION
+// ============================================================
+
+function startPremiumSubscription() {
+
+    showToast(
+        'Opening $15/month subscription...'
+    );
+
+
+    /*
+    ========================================================
+    OPTION A - PAYMENT WEBSITE
+    ========================================================
+
+    Example:
+
+    window.location.href =
+        'https://yourwebsite.com/subscribe';
+
+    ========================================================
+    OPTION B - ANDROID / GOOGLE PLAY BILLING
+    ========================================================
+
+    Your Android WebView can expose a native bridge:
+
+    window.Android.startPremiumSubscription();
+
+    ========================================================
+    */
+
+
+    if (
+        window.Android &&
+        typeof window.Android
+            .startPremiumSubscription ===
+            'function'
+    ) {
+
+        window.Android
+            .startPremiumSubscription();
+
+        return;
+    }
+
+
+    // No payment system connected yet
+
+    showToast(
+        'Connect your payment system first'
+    );
+}
+
+
+// ============================================================
+// PAYMENT SUCCESS CALLBACK
+// ============================================================
+//
+// Android / backend should call this function
+// ONLY AFTER payment is successfully verified.
+//
+// Example from Android:
+//
+// webView.evaluateJavascript(
+//   "premiumPaymentVerified('token')",
+//   null
+// );
+//
+// For real production:
+// verify receipt/token with your backend first.
+//
+// ============================================================
+
+window.premiumPaymentVerified =
+    function (
+        verificationToken
+    ) {
+
+        if (
+            !verificationToken
+        ) {
+
+            showToast(
+                'Payment verification failed'
+            );
+
+            return;
+        }
+
+
+        // This is only called AFTER external verification.
+
+        localStorage.setItem(
+            'premium_verified',
+            'true'
+        );
+
+
+        premiumActive = true;
+
+
+        if (upgradeModal) {
+
+            upgradeModal.classList.add(
+                'hidden'
+            );
+        }
+
+
+        updatePremiumUI();
+
+
+        showToast(
+            'Premium Activated'
+        );
+
+
+        // IMPORTANT:
+        // DO NOT enable 10GB here.
+    };
+
+
+// ============================================================
+// PREMIUM EXPIRED CALLBACK
+// ============================================================
+
+window.premiumSubscriptionExpired =
+    function () {
+
+        localStorage.removeItem(
+            'premium_verified'
+        );
+
+        premiumActive = false;
+
+        updatePremiumUI();
+
+        showToast(
+            'Premium subscription expired'
+        );
+    };
+
+
+// ============================================================
+// PIN BACK
+// ============================================================
+
+if (pinBackBtn) {
+
+    pinBackBtn.addEventListener(
+        'click',
+        function () {
+
+            enteredPin = '';
+            tempNewPin = '';
+
+            updatePinDots();
+
+
+            if (
+                pinState === 'set_new' ||
+                pinState ===
+                    'confirm_new'
+            ) {
+
+                showScreen(
+                    vaultScreen
+                );
+
+            } else {
+
+                showScreen(
+                    calcApp
+                );
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// LOCK VAULT
+// ============================================================
+
+if (lockVaultBtn) {
+
+    lockVaultBtn.addEventListener(
+        'click',
+        function () {
+
+            currentInput = '0';
+            calculationHistory = '';
+            enteredPin = '';
+
+            updateDisplay();
+            updatePinDots();
+
+            showScreen(
+                calcApp
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// CHANGE PIN
+// ============================================================
+
+if (changePinBtn) {
+
+    changePinBtn.addEventListener(
+        'click',
+        function () {
+
+            openPinScreen(
+                'set_new'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// PHOTO UPLOAD
+// ============================================================
+
+if (
+    tabPhotos &&
+    photoInput
+) {
+
+    tabPhotos.addEventListener(
+        'click',
+        function () {
+
+            photoInput.click();
+        }
+    );
+}
+
+
+// ============================================================
+// VIDEO UPLOAD
+// ============================================================
+
+if (
+    tabVideos &&
+    videoInput
+) {
+
+    tabVideos.addEventListener(
+        'click',
+        function () {
+
+            videoInput.click();
+        }
+    );
+}
+
+
+// ============================================================
+// PHOTO INPUT
+// ============================================================
+
+if (photoInput) {
+
+    photoInput.addEventListener(
+        'change',
+        function (event) {
+
+            handleFiles(
+                event.target.files,
+                'image'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// VIDEO INPUT
+// ============================================================
+
+if (videoInput) {
+
+    videoInput.addEventListener(
+        'change',
+        function (event) {
+
+            handleFiles(
+                event.target.files,
+                'video'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// HANDLE FILES
+// ============================================================
+
+async function handleFiles(
+    files,
+    type
+) {
+
+    const selectedFiles =
+        Array.from(files);
+
+    if (
+        selectedFiles.length === 0
+    ) {
+
+        return;
+    }
+
+
+    for (
+        const file of selectedFiles
+    ) {
+
+
+        // IMAGE VALIDATION
+
+        if (
+            type === 'image' &&
+            !file.type.startsWith(
+                'image/'
+            )
+        ) {
+
+            continue;
+        }
+
+
+        // VIDEO VALIDATION
+
+        if (
+            type === 'video' &&
+            !file.type.startsWith(
+                'video/'
+            )
+        ) {
+
+            continue;
+        }
+
+
+        // STORAGE CHECK
+
+        const usedBytes =
+            calculateUsedBytes();
+
+        const limitBytes =
+            getStorageLimitMB() *
+            1024 *
+            1024;
+
+
+        if (
+            usedBytes +
+            file.size >
+            limitBytes
+        ) {
+
+            showToast(
+                storage10GBActive
+                    ? '10 GB storage limit reached'
+                    : '1 GB storage limit reached'
+            );
+
+            continue;
+        }
+
+
+        try {
+
+            await addMediaToDB(
+                file,
+                type
+            );
+
+            showToast(
+                type === 'image'
+                    ? 'Photo saved locally'
+                    : 'Video saved locally'
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Save error:',
+                error
+            );
+
+            showToast(
+                'Could not save file'
+            );
+        }
+    }
+
+
+    if (photoInput) {
+
+        photoInput.value = '';
+    }
+
+    if (videoInput) {
+
+        videoInput.value = '';
+    }
+
+
+    await loadMediaFiles();
+}
+
+
+// ============================================================
+// USED STORAGE
+// ============================================================
+
+function calculateUsedBytes() {
+
+    return mediaFiles.reduce(
+        (total, item) => {
+
+            return (
+                total +
+                Number(
+                    item.size || 0
+                )
+            );
+        },
+        0
+    );
+}
+
+
+// ============================================================
+// FILTER BUTTONS
+// ============================================================
+
+if (subTabAll) {
+
+    subTabAll.addEventListener(
+        'click',
+        () => {
+
+            setSubFilter(
+                'all'
+            );
+        }
+    );
+}
+
+
+if (subTabPhotos) {
+
+    subTabPhotos.addEventListener(
+        'click',
+        () => {
+
+            setSubFilter(
+                'image'
+            );
+        }
+    );
+}
+
+
+if (subTabVideos) {
+
+    subTabVideos.addEventListener(
+        'click',
+        () => {
+
+            setSubFilter(
+                'video'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// SET FILTER
+// ============================================================
+
+function setSubFilter(
+    filter
+) {
+
+    activeSubFilter =
+        filter;
+
+
+    [
+        subTabAll,
+        subTabPhotos,
+        subTabVideos
+    ].forEach(button => {
+
+        if (button) {
+
+            button.classList.remove(
+                'active'
+            );
+        }
+    });
+
+
+    if (
+        filter === 'all' &&
+        subTabAll
+    ) {
+
+        subTabAll.classList.add(
+            'active'
+        );
+    }
+
+
+    if (
+        filter === 'image' &&
+        subTabPhotos
+    ) {
+
+        subTabPhotos.classList.add(
+            'active'
+        );
+    }
+
+
+    if (
+        filter === 'video' &&
+        subTabVideos
+    ) {
+
+        subTabVideos.classList.add(
+            'active'
+        );
+    }
+
+
+    renderVaultMedia();
+}
+
+
+// ============================================================
+// RENDER MEDIA
+// ============================================================
+
+function renderVaultMedia() {
+
+    if (!mediaGrid) return;
+
+
+    mediaGrid.innerHTML = '';
+
+
+    const filtered =
+        mediaFiles.filter(item => {
+
+            if (
+                activeSubFilter ===
+                'all'
+            ) {
+
+                return true;
+            }
+
+            return (
+                item.type ===
+                activeSubFilter
+            );
+        });
+
+
+    if (emptyState) {
+
+        emptyState.style.display =
+            filtered.length === 0
+                ? 'flex'
+                : 'none';
+    }
+
+
+    filtered.forEach(item => {
+
+        const card =
+            document.createElement(
+                'div'
+            );
+
+        card.className =
+            'media-item';
+
+
+        // Create temporary object URL
+        const objectURL =
+            URL.createObjectURL(
+                item.blob
+            );
+
+
+        let mediaElement;
+
+
+        // IMAGE
+        if (
+            item.type === 'image'
+        ) {
+
+            mediaElement =
+                document.createElement(
+                    'img'
+                );
+
+            mediaElement.src =
+                objectURL;
+
+            mediaElement.alt =
+                item.name ||
+                'Vault photo';
+
+            mediaElement.loading =
+                'lazy';
+        }
+
+
+        // VIDEO
+        else {
+
+            mediaElement =
+                document.createElement(
+                    'video'
+                );
+
+            mediaElement.src =
+                objectURL;
+
+            mediaElement.preload =
+                'metadata';
+
+            mediaElement.muted =
+                true;
+
+            mediaElement.setAttribute(
+                'playsinline',
+                'true'
+            );
+        }
+
+
+        // DELETE BUTTON
+
+        const deleteButton =
+            document.createElement(
+                'button'
+            );
+
+        deleteButton.className =
+            'delete-btn';
+
+        deleteButton.type =
+            'button';
+
+        deleteButton.innerHTML =
+            '&times;';
+
+        deleteButton.setAttribute(
+            'aria-label',
+            'Delete'
+        );
+
+
+        deleteButton.addEventListener(
+            'click',
+            async function (
+                event
+            ) {
+
+                event.stopPropagation();
+
+                const confirmed =
+                    confirm(
+                        'Delete this file from your vault?'
+                    );
+
+                if (!confirmed) return;
+
+
+                try {
+
+                    await deleteMediaFromDB(
+                        item.id
+                    );
+
+                    URL.revokeObjectURL(
+                        objectURL
+                    );
+
+                    showToast(
+                        'File deleted'
+                    );
+
+                    await loadMediaFiles();
+
+                } catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+                    showToast(
+                        'Could not delete file'
+                    );
+                }
+            }
+        );
+
+
+        card.appendChild(
+            mediaElement
+        );
+
+        card.appendChild(
+            deleteButton
+        );
+
+
+        card.addEventListener(
+            'click',
+            function () {
+
+                openPreview(
+                    item
+                );
+            }
+        );
+
+
+        mediaGrid.appendChild(
+            card
+        );
+    });
+}
+
+
+// ============================================================
+// STORAGE UI
+// ============================================================
+
+function updateStorageInfo() {
+
+    const totalBytes =
+        calculateUsedBytes();
+
+    const totalMB =
+        totalBytes /
+        (1024 * 1024);
+
+    const limitMB =
+        getStorageLimitMB();
+
+    const percentage =
+        Math.min(
+            Math.round(
+                (
+                    totalMB /
+                    limitMB
+                ) * 100
+            ),
+            100
+        );
+
+
+    if (storageUsed) {
+
+        if (totalMB >= 1024) {
+
+            storageUsed.textContent =
+                `${(
+                    totalMB / 1024
+                ).toFixed(2)} GB used`;
+
+        } else {
+
+            storageUsed.textContent =
+                `${totalMB.toFixed(2)} MB used`;
+        }
+    }
+
+
+    if (storagePercent) {
+
+        storagePercent.textContent =
+            `${percentage}%`;
+    }
+
+
+    if (progressBar) {
+
+        progressBar.style.width =
+            `${percentage}%`;
+    }
+
+
+    if (storageTotal) {
+
+        storageTotal.textContent =
+            storage10GBActive
+                ? '10 GB total'
+                : '1 GB total';
+    }
+}
+
+
+// ============================================================
+// OPEN PREVIEW
+// ============================================================
+
+function openPreview(item) {
+
+    if (
+        !previewModal ||
+        !previewContainer
+    ) {
+
+        return;
+    }
+
+
+    previewContainer.innerHTML =
+        '';
+
+
+    const objectURL =
+        URL.createObjectURL(
+            item.blob
+        );
+
+
+    let element;
+
+
+    if (
+        item.type === 'image'
+    ) {
+
+        element =
+            document.createElement(
+                'img'
+            );
+
+        element.src =
+            objectURL;
+
+        element.alt =
+            item.name ||
+            'Vault image';
+
+    } else {
+
+        element =
+            document.createElement(
+                'video'
+            );
+
+        element.src =
+            objectURL;
+
+        element.controls =
+            true;
+
+        element.autoplay =
+            true;
+
+        element.setAttribute(
+            'playsinline',
+            'true'
+        );
+    }
+
+
+    element.dataset.objectUrl =
+        objectURL;
+
+
+    previewContainer.appendChild(
+        element
+    );
+
+
+    previewModal.classList.remove(
+        'hidden'
+    );
+}
+
+
+// ============================================================
+// CLOSE PREVIEW
+// ============================================================
+
+function closePreviewModal() {
+
+    if (!previewModal) return;
+
+
+    if (previewContainer) {
+
+        const media =
+            previewContainer.querySelector(
+                'img, video'
+            );
+
+        if (media) {
+
+            if (
+                media.tagName ===
+                'VIDEO'
+            ) {
+
+                media.pause();
+            }
+
+
+            const objectURL =
+                media.dataset.objectUrl;
+
+            if (objectURL) {
+
+                URL.revokeObjectURL(
+                    objectURL
+                );
+            }
+        }
+
+
+        previewContainer.innerHTML =
+            '';
+    }
+
+
+    previewModal.classList.add(
+        'hidden'
+    );
+}
+
+
+// ============================================================
+// CLOSE PREVIEW BUTTON
+// ============================================================
+
+if (closePreviewBtn) {
+
+    closePreviewBtn.addEventListener(
+        'click',
+        closePreviewModal
+    );
+}
+
+
+// ============================================================
+// PREVIEW BACKDROP
+// ============================================================
+
+if (previewModal) {
+
+    previewModal.addEventListener(
+        'click',
+        function (event) {
+
+            if (
+                event.target ===
+                previewModal
+            ) {
+
+                closePreviewModal();
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// PREMIUM MODAL BACKDROP
+// ============================================================
+
+if (upgradeModal) {
+
+    upgradeModal.addEventListener(
+        'click',
+        function (event) {
+
+            if (
+                event.target ===
+                upgradeModal
+            ) {
+
+                upgradeModal.classList.add(
+                    'hidden'
+                );
+            }
+        }
+    );
+}
+
+
+// ============================================================
+// OPTIONAL SEPARATE 10GB ACTIVATION
+// ============================================================
+//
+// IMPORTANT:
+//
+// Do NOT call this when Premium activates.
+//
+// Call only after a separate 10GB storage purchase is verified.
+//
+// Example:
+//
+// window.storage10GBPaymentVerified('valid-token')
+//
+// ============================================================
+
+window.storage10GBPaymentVerified =
+    function (
+        verificationToken
+    ) {
+
+        if (
+            !verificationToken
+        ) {
+
+            showToast(
+                '10GB verification failed'
+            );
+
+            return;
+        }
+
+
+        localStorage.setItem(
+            'storage_10gb_active',
+            'true'
+        );
+
+        storage10GBActive = true;
+
+        updateStorageInfo();
+
+        showToast(
+            '10GB Storage Activated'
+        );
+    };
+
+
+// ============================================================
+// APP START
+// ============================================================
+
+async function initializeApp() {
+
+    updateDisplay();
+
+    updatePremiumUI();
+
+    updateStorageInfo();
+
+
+    try {
+
+        await openVaultDatabase();
+
+        await loadMediaFiles();
+
+    } catch (error) {
+
+        console.error(
+            'Database startup error:',
+            error
+        );
+
+        showToast(
+            'Local storage database unavailable'
+        );
+    }
+}
+
+
+initializeApp();
+
+ஒரு முக்கியமான விஷயம்: இந்த code-ல் IndexedDB device/WebView local storage-ஐ பயன்படுத்தும், ஆனாலும் 1GB அல்லது 10GB guaranteed physical quota இல்லை; Android WebView/device storage policy எவ்வளவு allow பண்ணுதோ அதைப் பொறுத்தது.
+
+மேலும் premiumPaymentVerified()-ஐ APK Java/Kotlin side அல்லது உங்கள் backend real payment verify ஆன பிறகு மட்டும் call பண்ணணும். இல்லாட்டி $15/month protection முழுமையாக secure ஆகாது.
+
+ellam pila na sonnai ondu neenga senjikirai ondu, 
+
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#080b12">
-    <title>Calculator Pro</title>
-    <link rel="stylesheet" href="style.css">
+
+<html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta name="theme-color" content="#080b12">
+
+<title>Calculator Pro</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+
 </head>
 
 <body>
 
-<!-- =========================
-     CALCULATOR
-========================= -->
+<!-- ========================= CALCULATOR ========================= -->
+
 <div id="calcApp" class="app-screen">
 
-    <main class="calculator-app">
+<main class="calculator-app">
 
-        <div class="calculator-top">
-            <div>
-                <span class="small-label">Calculator</span>
-                <h1>Calculator Pro</h1>
-            </div>
-
-            <div class="status-pill">
-                <span class="status-dot"></span>
-                Ready
-            </div>
+    <div class="calculator-top">
+        <div>
+            <span class="small-label">Calculator</span>
+            <h1>Calculator Pro</h1>
         </div>
 
-        <section class="calculator">
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            Ready
+        </div>
+    </div>
 
-            <div class="display-screen">
-                <div id="history"></div>
-                <div id="display">0</div>
-            </div>
+    <section class="calculator">
 
-            <div class="keypad">
+        <div class="display-screen">
+            <div id="history"></div>
+            <div id="display">0</div>
+        </div>
 
-                <button class="key action" data-key="clear">AC</button>
-                <button class="key action" data-key="sqrt">√</button>
-                <button class="key action" data-key="delete">⌫</button>
-                <button class="key operator" data-value="/">÷</button>
+        <div class="keypad">
 
-                <button class="key" data-value="7">7</button>
-                <button class="key" data-value="8">8</button>
-                <button class="key" data-value="9">9</button>
-                <button class="key operator" data-value="*">×</button>
+            <button class="key action" data-key="clear">AC</button>
+            <button class="key action" data-key="sqrt">√</button>
+            <button class="key action" data-key="delete">⌫</button>
+            <button class="key operator" data-value="/">÷</button>
 
-                <button class="key" data-value="4">4</button>
-                <button class="key" data-value="5">5</button>
-                <button class="key" data-value="6">6</button>
-                <button class="key operator" data-value="-">−</button>
+            <button class="key" data-value="7">7</button>
+            <button class="key" data-value="8">8</button>
+            <button class="key" data-value="9">9</button>
+            <button class="key operator" data-value="*">×</button>
 
-                <button class="key" data-value="1">1</button>
-                <button class="key" data-value="2">2</button>
-                <button class="key" data-value="3">3</button>
-                <button class="key operator" data-value="+">+</button>
+            <button class="key" data-value="4">4</button>
+            <button class="key" data-value="5">5</button>
+            <button class="key" data-value="6">6</button>
+            <button class="key operator" data-value="-">−</button>
 
-                <button class="key zero" data-value="0">0</button>
-                <button class="key" data-value=".">.</button>
-                <button class="key equal" data-key="equal">=</button>
+            <button class="key" data-value="1">1</button>
+            <button class="key" data-value="2">2</button>
+            <button class="key" data-value="3">3</button>
+            <button class="key operator" data-value="+">+</button>
 
-            </div>
+            <button class="key zero" data-value="0">0</button>
+            <button class="key" data-value=".">.</button>
+            <button class="key equal" data-key="equal">=</button>
 
-        </section>
+        </div>
 
-        <p class="calculator-footer">
-            Fast • Simple • Accurate
-        </p>
+    </section>
 
-    </main>
+    <p class="calculator-footer">
+        Fast • Simple • Accurate
+    </p>
+
+</main>
 
 </div>
 
+<!-- ========================= PIN SCREEN ========================= -->
 
-<!-- =========================
-     PIN SCREEN
-========================= -->
 <div id="pinScreen" class="app-screen hidden">
 
-    <main class="pin-page">
+<main class="pin-page">
 
-        <button class="back-circle" type="button" id="pinBackBtn">
-            ←
+    <button class="back-circle" type="button" onclick="location.reload()">
+        ←
+    </button>
+
+    <div class="lock-icon">
+        🔒
+    </div>
+
+    <span class="secure-label">PRIVATE ACCESS</span>
+
+    <h2 id="pinScreenTitle">Enter PIN</h2>
+
+    <p class="pin-description">
+        Enter your 4-digit security PIN to unlock your private vault.
+    </p>
+
+    <div class="pin-dots">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+    </div>
+
+    <div class="pin-pad">
+
+        <button class="pin-btn" data-pin="1">1</button>
+        <button class="pin-btn" data-pin="2">2</button>
+        <button class="pin-btn" data-pin="3">3</button>
+
+        <button class="pin-btn" data-pin="4">4</button>
+        <button class="pin-btn" data-pin="5">5</button>
+        <button class="pin-btn" data-pin="6">6</button>
+
+        <button class="pin-btn" data-pin="7">7</button>
+        <button class="pin-btn" data-pin="8">8</button>
+        <button class="pin-btn" data-pin="9">9</button>
+
+        <button class="pin-btn utility" id="pinDelete">
+            ⌫
         </button>
 
-        <div class="lock-icon">
-            🔒
-        </div>
+        <button class="pin-btn" data-pin="0">0</button>
 
-        <span class="secure-label">PRIVATE ACCESS</span>
+        <button class="pin-btn submit" id="pinSubmit">
+            ✓
+        </button>
 
-        <h2 id="pinScreenTitle">Enter PIN</h2>
+    </div>
 
-        <p class="pin-description" id="pinDescription">
-            Enter your 4-digit security PIN to unlock your private vault.
-        </p>
+    <a href="#" class="forgot-pin">
+        Forgot your PIN?
+    </a>
 
-        <div class="pin-dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-        </div>
-
-        <div class="pin-pad">
-
-            <button class="pin-btn" data-pin="1">1</button>
-            <button class="pin-btn" data-pin="2">2</button>
-            <button class="pin-btn" data-pin="3">3</button>
-
-            <button class="pin-btn" data-pin="4">4</button>
-            <button class="pin-btn" data-pin="5">5</button>
-            <button class="pin-btn" data-pin="6">6</button>
-
-            <button class="pin-btn" data-pin="7">7</button>
-            <button class="pin-btn" data-pin="8">8</button>
-            <button class="pin-btn" data-pin="9">9</button>
-
-            <button class="pin-btn utility" id="pinDelete">⌫</button>
-            <button class="pin-btn" data-pin="0">0</button>
-            <button class="pin-btn submit" id="pinSubmit">✓</button>
-
-        </div>
-
-        <a href="#" class="forgot-pin">
-            Forgot your PIN?
-        </a>
-
-    </main>
+</main>
 
 </div>
 
+<!-- ========================= VAULT ========================= -->
 
-<!-- =========================
-     VAULT
-========================= -->
 <div id="vaultScreen" class="app-screen hidden">
 
-    <main class="vault-app">
+<main class="vault-app">
 
-        <header class="vault-header">
+    <!-- HEADER -->
 
-            <div class="vault-title">
+    <header class="vault-header">
 
-                <div class="vault-logo">
-                    🔐
-                </div>
+        <div class="vault-title">
 
-                <div>
-                    <span class="small-label">PRIVATE STORAGE</span>
-                    <h2>My Vault</h2>
-                </div>
-
+            <div class="vault-logo">
+                🔐
             </div>
-
-            <div class="vault-actions">
-
-                <button id="changePinBtn" class="vault-icon-btn" title="Change PIN">
-                    🔑
-                </button>
-
-                <button id="lockVault" class="vault-icon-btn lock" title="Lock Vault">
-                    🔒
-                </button>
-
-            </div>
-
-        </header>
-
-
-        <section class="welcome-card">
 
             <div>
-                <span class="welcome-badge">PRIVATE VAULT</span>
-                <h3>Your private space.</h3>
-                <p>
-                    Keep personal photos and videos inside your local vault.
-                </p>
-            </div>
-
-            <div class="security-art">
-                🛡️
-            </div>
-
-        </section>
-
-
-        <section class="storage-card">
-
-            <div class="storage-top">
-
-                <div>
-                    <span class="card-label">Storage</span>
-                    <h3>Vault Storage</h3>
-                </div>
-
-                <div class="storage-percentage" id="storagePercent">
-                    0%
-                </div>
-
-            </div>
-
-            <div class="progress-bar-container">
-                <div id="progressBar" class="progress-bar"></div>
-            </div>
-
-            <div class="storage-details">
-                <span id="storageUsed">0 MB used</span>
-                <span id="storageTotal">1 GB total</span>
-            </div>
-
-        </section>
-
-
-        <section class="upgrade-banner" id="openUpgradeModal">
-
-            <div class="premium-icon">✦</div>
-
-            <div class="upgrade-text">
-
-                <span class="premium-label">CALCULATOR PRO+</span>
-
-                <h3 id="premiumBannerTitle">
-                    Unlock Pro+ Features
-                </h3>
-
-                <p id="premiumBannerText">
-                    Premium account recovery and extra features.
-                </p>
-
-            </div>
-
-            <button class="upgrade-btn" id="upgradeBtn">
-                Upgrade
-            </button>
-
-        </section>
-
-
-        <div class="section-heading">
-
-            <div>
-                <span class="small-label">QUICK ACTIONS</span>
-                <h3>Add to Vault</h3>
+                <span class="small-label">PRIVATE STORAGE</span>
+                <h2>My Vault</h2>
             </div>
 
         </div>
 
+        <div class="vault-actions">
 
-        <div class="upload-actions">
-
-            <button id="tabPhotos" class="action-tab">
-
-                <div class="action-icon photo-icon">🖼</div>
-
-                <div class="action-copy">
-                    <strong>Photos</strong>
-                    <span>Add private images</span>
-                </div>
-
-                <span class="action-arrow">+</span>
-
+            <button
+                id="changePinBtn"
+                class="vault-icon-btn"
+                title="Change PIN">
+                🔑
             </button>
 
-
-            <button id="tabVideos" class="action-tab">
-
-                <div class="action-icon video-icon">▶</div>
-
-                <div class="action-copy">
-                    <strong>Videos</strong>
-                    <span>Add private videos</span>
-                </div>
-
-                <span class="action-arrow">+</span>
-
+            <button
+                id="lockVault"
+                class="vault-icon-btn lock"
+                title="Lock Vault">
+                🔒
             </button>
 
         </div>
 
-
-        <input type="file" id="photoInput" accept="image/*" multiple hidden>
-        <input type="file" id="videoInput" accept="video/*" multiple hidden>
+    </header>
 
 
-        <div class="files-heading">
+    <!-- WELCOME -->
 
-            <div>
-                <span class="small-label">PRIVATE FILES</span>
-                <h3>Your Files</h3>
-            </div>
+    <section class="welcome-card">
 
-        </div>
+        <div>
 
+            <span class="welcome-badge">
+                ENCRYPTED VAULT
+            </span>
 
-        <div class="sub-tabs">
-
-            <button id="subTabAll" class="sub-tab active">
-                All
-            </button>
-
-            <button id="subTabPhotos" class="sub-tab">
-                Photos
-            </button>
-
-            <button id="subTabVideos" class="sub-tab">
-                Videos
-            </button>
-
-        </div>
-
-
-        <div id="mediaGrid" class="media-grid"></div>
-
-
-        <div id="emptyState" class="empty-state">
-
-            <div class="empty-icon">🔐</div>
-
-            <h3>Your vault is empty</h3>
+            <h3>Your private space.</h3>
 
             <p>
-                Add photos or videos to begin building your private collection.
+                Keep personal photos and videos protected
+                inside your secure vault.
             </p>
 
         </div>
 
-    </main>
+        <div class="security-art">
+            🛡️
+        </div>
 
-</div>
+    </section>
 
 
-<!-- =========================
-     PREVIEW MODAL
-========================= -->
-<div id="previewModal" class="modal hidden">
+    <!-- STORAGE -->
 
-    <div class="preview-wrapper">
+    <section class="storage-card">
 
-        <div class="preview-top">
+        <div class="storage-top">
 
-            <span>Secure Preview</span>
+            <div>
+                <span class="card-label">
+                    Storage
+                </span>
 
-            <button id="closePreview" class="close-btn">
-                ×
-            </button>
+                <h3>Vault Storage</h3>
+            </div>
+
+            <div class="storage-percentage" id="storagePercent">
+                0%
+            </div>
 
         </div>
 
-        <div id="previewContainer"></div>
+
+        <div class="progress-bar-container">
+
+            <div
+                id="progressBar"
+                class="progress-bar">
+            </div>
+
+        </div>
+
+
+        <div class="storage-details">
+
+            <span id="storageUsed">
+                0 MB used
+            </span>
+
+            <span>
+                1 GB total
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- PREMIUM -->
+
+    <section
+        class="upgrade-banner"
+        id="openUpgradeModal">
+
+        <div class="premium-icon">
+            ✦
+        </div>
+
+        <div class="upgrade-text">
+
+            <span class="premium-label">
+                CALCULATOR PRO+
+            </span>
+
+            <h3>Unlock 10 GB Storage</h3>
+
+            <p>
+                More space for your private memories.
+            </p>
+
+        </div>
+
+        <button class="upgrade-btn">
+            Upgrade
+        </button>
+
+    </section>
+
+
+    <!-- QUICK ACTIONS -->
+
+    <div class="section-heading">
+
+        <div>
+            <span class="small-label">
+                QUICK ACTIONS
+            </span>
+
+            <h3>Add to Vault</h3>
+        </div>
 
     </div>
 
-</div>
+
+    <div class="upload-actions">
+
+        <button
+            id="tabPhotos"
+            class="action-tab">
+
+            <div class="action-icon photo-icon">
+                🖼
+            </div>
+
+            <div class="action-copy">
+                <strong>Photos</strong>
+                <span>Add private images</span>
+            </div>
+
+            <span class="action-arrow">
+                +
+            </span>
+
+        </button>
 
 
-<!-- =========================
-     PREMIUM MODAL
-========================= -->
-<div id="upgradeModal" class="modal hidden">
+        <button
+            id="tabVideos"
+            class="action-tab">
 
-    <div class="modal-card premium-modal">
+            <div class="action-icon video-icon">
+                ▶
+            </div>
 
-        <div class="premium-modal-icon">✦</div>
+            <div class="action-copy">
+                <strong>Videos</strong>
+                <span>Add private videos</span>
+            </div>
 
-        <span class="premium-label">
-            CALCULATOR PRO+
-        </span>
+            <span class="action-arrow">
+                +
+            </span>
 
-        <h2>Activate Calculator Pro+</h2>
+        </button>
+
+    </div>
+
+
+    <input
+        type="file"
+        id="photoInput"
+        accept="image/*"
+        multiple
+        hidden>
+
+    <input
+        type="file"
+        id="videoInput"
+        accept="video/*"
+        multiple
+        hidden>
+
+
+    <!-- FILE SECTION -->
+
+    <div class="files-heading">
+
+        <div>
+
+            <span class="small-label">
+                PRIVATE FILES
+            </span>
+
+            <h3>Your Files</h3>
+
+        </div>
+
+    </div>
+
+
+    <!-- TABS -->
+
+    <div class="sub-tabs">
+
+        <button
+            id="subTabAll"
+            class="sub-tab active">
+            All
+        </button>
+
+        <button
+            id="subTabPhotos"
+            class="sub-tab">
+            Photos
+        </button>
+
+        <button
+            id="subTabVideos"
+            class="sub-tab">
+            Videos
+        </button>
+
+    </div>
+
+
+    <!-- MEDIA GRID -->
+
+    <div
+        id="mediaGrid"
+        class="media-grid">
+
+        <!-- Uploaded files appear here -->
+
+    </div>
+
+
+    <!-- EMPTY STATE -->
+
+    <div
+        id="emptyState"
+        class="empty-state">
+
+        <div class="empty-icon">
+            🔐
+        </div>
+
+        <h3>Your vault is empty</h3>
 
         <p>
-            Unlock premium account recovery and PIN reset.
-            <strong>10 GB storage is NOT included automatically.</strong>
+            Add photos or videos to begin building your
+            private collection.
         </p>
 
-        <div class="premium-features">
+    </div>
 
-            <div>
-                <span>✓</span>
-                PIN Recovery & Reset
-            </div>
+</main>
 
-            <div>
-                <span>✓</span>
-                Premium Vault Features
-            </div>
+</div>
 
-            <div>
-                <span>✓</span>
-                Enhanced Privacy Options
-            </div>
+<!-- ========================= PREVIEW MODAL ========================= -->
 
-        </div>
+<div id="previewModal" class="modal hidden">
 
-        <button id="confirmSubscribe" class="primary-btn">
-            Activate Pro+
-        </button>
+<div class="preview-wrapper">
 
-        <button id="closeModal" class="secondary-btn">
-            Maybe Later
+    <div class="preview-top">
+
+        <span>
+            Secure Preview
+        </span>
+
+        <button
+            id="closePreview"
+            class="close-btn">
+            ×
         </button>
 
     </div>
 
+    <div id="previewContainer"></div>
+
 </div>
 
+</div>
 
-<!-- =========================
-     TOAST
-========================= -->
-<div id="toast" class="toast hidden"></div>
+<!-- ========================= UPGRADE MODAL ========================= -->
 
+<div id="upgradeModal" class="modal hidden">
+
+<div class="modal-card premium-modal">
+
+    <div class="premium-modal-icon">
+        ✦
+    </div>
+
+    <span class="premium-label">
+        CALCULATOR PRO+
+    </span>
+
+    <h2>Upgrade Your Vault</h2>
+
+    <p>
+        Increase your secure storage to
+        <strong>10 GB</strong> and keep more private
+        photos and videos protected.
+    </p>
+
+
+    <div class="premium-features">
+
+        <div>
+            <span>✓</span>
+            10 GB Vault Storage
+        </div>
+
+        <div>
+            <span>✓</span>
+            Photo & Video Protection
+        </div>
+
+        <div>
+            <span>✓</span>
+            Premium Vault Experience
+        </div>
+
+    </div>
+
+
+    <button
+        id="confirmSubscribe"
+        class="primary-btn">
+
+        Upgrade to Pro+
+
+    </button>
+
+
+    <button
+        id="closeModal"
+        class="secondary-btn">
+
+        Maybe Later
+
+    </button>
+
+</div>
+
+</div>
 
 <script src="script.js"></script>
 
-</body>
-</html>
+</body> </html>
