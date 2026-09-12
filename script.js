@@ -1,5 +1,5 @@
 // ==========================================
-// DOM ELEMENTS
+// DOM
 // ==========================================
 
 const calcApp = document.getElementById('calcApp');
@@ -15,7 +15,9 @@ const pinPad = document.querySelector('.pin-pad');
 const pinDelete = document.getElementById('pinDelete');
 const pinSubmit = document.getElementById('pinSubmit');
 const pinScreenTitle = document.getElementById('pinScreenTitle');
+const pinDescription = document.getElementById('pinDescription');
 const forgotPinBtn = document.querySelector('.forgot-pin');
+const pinBackBtn = document.getElementById('pinBackBtn');
 
 const lockVaultBtn = document.getElementById('lockVault');
 const changePinBtn = document.getElementById('changePinBtn');
@@ -31,10 +33,12 @@ const subTabPhotos = document.getElementById('subTabPhotos');
 const subTabVideos = document.getElementById('subTabVideos');
 
 const mediaGrid = document.getElementById('mediaGrid');
+const emptyState = document.getElementById('emptyState');
 
 const storagePercent = document.getElementById('storagePercent');
 const progressBar = document.getElementById('progressBar');
 const storageUsed = document.getElementById('storageUsed');
+const storageTotal = document.getElementById('storageTotal');
 
 const previewModal = document.getElementById('previewModal');
 const closePreviewBtn = document.getElementById('closePreview');
@@ -45,27 +49,36 @@ const openUpgradeModal = document.getElementById('openUpgradeModal');
 const closeModalBtn = document.getElementById('closeModal');
 const confirmSubscribeBtn = document.getElementById('confirmSubscribe');
 
+const premiumBannerTitle = document.getElementById('premiumBannerTitle');
+const premiumBannerText = document.getElementById('premiumBannerText');
+const upgradeBtn = document.getElementById('upgradeBtn');
+
+const toast = document.getElementById('toast');
+
 
 // ==========================================
 // APP STATE
 // ==========================================
 
 let currentInput = '0';
-
 let calculationHistory = '';
 
 let storedPin =
     localStorage.getItem('vault_pin') || '1234';
 
 let enteredPin = '';
-
 let pinState = 'verify';
-
 let tempNewPin = '';
 
 let mediaFiles = [];
-
 let activeSubFilter = 'all';
+
+let premiumActive =
+    localStorage.getItem('premium_active') === 'true';
+
+
+// Premium activate ஆனாலும் 10GB ஆகாது
+const STORAGE_LIMIT_MB = 1024;
 
 
 // ==========================================
@@ -83,12 +96,15 @@ try {
             JSON.parse(savedMedia);
 
         if (!Array.isArray(mediaFiles)) {
+
             mediaFiles = [];
+
         }
 
     }
 
-} catch (error) {
+}
+catch (error) {
 
     console.error(
         'Could not load vault media:',
@@ -101,7 +117,147 @@ try {
 
 
 // ==========================================
-// CALCULATOR
+// TOAST MESSAGE
+// ==========================================
+
+function showToast(message) {
+
+    if (!toast) {
+
+        alert(message);
+
+        return;
+
+    }
+
+    toast.textContent = message;
+
+    toast.classList.remove('hidden');
+
+    clearTimeout(showToast.timer);
+
+    showToast.timer = setTimeout(
+        function () {
+
+            toast.classList.add('hidden');
+
+        },
+        2200
+    );
+
+}
+
+
+// ==========================================
+// SCREEN SWITCH
+// ==========================================
+
+function showScreen(screen) {
+
+    [
+        calcApp,
+        pinScreen,
+        vaultScreen
+    ].forEach(
+        function (item) {
+
+            if (item) {
+
+                item.classList.add('hidden');
+
+            }
+
+        }
+    );
+
+    if (screen) {
+
+        screen.classList.remove('hidden');
+
+    }
+
+}
+
+
+// ==========================================
+// PREMIUM CHECK
+// ==========================================
+
+function isPremiumActive() {
+
+    return (
+        localStorage.getItem(
+            'premium_active'
+        ) === 'true'
+    );
+
+}
+
+
+// ==========================================
+// PREMIUM UI
+// ==========================================
+
+function updatePremiumUI() {
+
+    premiumActive =
+        isPremiumActive();
+
+    if (premiumActive) {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Pro+ Active';
+
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                'PIN recovery active. Storage remains 1 GB.';
+
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                'Active';
+
+        }
+
+    }
+
+    else {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Unlock Pro+ Features';
+
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                'Premium account recovery and extra features.';
+
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                'Upgrade';
+
+        }
+
+    }
+
+}
+
+
+// ==========================================
+// CALCULATOR KEYPAD
 // ==========================================
 
 if (keypad) {
@@ -123,9 +279,9 @@ if (keypad) {
                 key.dataset.key;
 
 
-            // --------------------------
+            // ==================================
             // RESET AFTER ERROR
-            // --------------------------
+            // ==================================
 
             if (
                 currentInput === 'Error' &&
@@ -142,12 +298,13 @@ if (keypad) {
                 updateDisplay();
 
                 return;
+
             }
 
 
-            // --------------------------
-            // NUMBERS / OPERATORS
-            // --------------------------
+            // ==================================
+            // NUMBER / OPERATOR
+            // ==================================
 
             if (value !== undefined) {
 
@@ -189,7 +346,9 @@ if (keypad) {
                                 -1
                             ) + value;
 
-                    } else {
+                    }
+
+                    else {
 
                         currentInput += value;
 
@@ -199,7 +358,9 @@ if (keypad) {
 
 
                 // DECIMAL
-                else if (value === '.') {
+                else if (
+                    value === '.'
+                ) {
 
                     const currentNumber =
                         currentInput
@@ -227,7 +388,9 @@ if (keypad) {
 
                         currentInput = value;
 
-                    } else {
+                    }
+
+                    else {
 
                         currentInput += value;
 
@@ -238,9 +401,9 @@ if (keypad) {
             }
 
 
-            // --------------------------
+            // ==================================
             // CLEAR
-            // --------------------------
+            // ==================================
 
             else if (
                 keyType === 'clear'
@@ -253,9 +416,9 @@ if (keypad) {
             }
 
 
-            // --------------------------
+            // ==================================
             // DELETE
-            // --------------------------
+            // ==================================
 
             else if (
                 keyType === 'delete'
@@ -284,9 +447,9 @@ if (keypad) {
             }
 
 
-            // --------------------------
+            // ==================================
             // SQUARE ROOT
-            // --------------------------
+            // ==================================
 
             else if (
                 keyType === 'sqrt'
@@ -331,26 +494,27 @@ if (keypad) {
             }
 
 
-            // --------------------------
+            // ==================================
             // EQUAL
-            // --------------------------
+            // ==================================
 
             else if (
                 keyType === 'equal'
             ) {
 
 
-                // =================================
+                // ==================================
                 // SECRET VAULT TRIGGER
-                // =================================
+                // ==================================
                 //
-                // Type PIN into calculator:
+                // Example:
+                // PIN = 1234
                 //
-                // 1234
+                // Calculator:
+                // 1234 =
                 //
-                // then press =
-                //
-                // =================================
+                // Then PIN screen opens
+                // ==================================
 
                 if (
                     currentInput === storedPin
@@ -367,10 +531,13 @@ if (keypad) {
                     updateDisplay();
 
                     return;
+
                 }
 
 
+                // ==================================
                 // NORMAL CALCULATION
+                // ==================================
 
                 try {
 
@@ -455,11 +622,8 @@ function updateDisplay() {
 
 
 // ==========================================
-// DOUBLE CLICK DISPLAY
+// DOUBLE TAP DISPLAY
 // ==========================================
-//
-// Optional secret shortcut
-//
 
 if (display) {
 
@@ -489,61 +653,95 @@ function openPinScreen(state) {
 
     updatePinDots();
 
-
-    if (calcApp) {
-
-        calcApp.classList.add(
-            'hidden'
-        );
-
-    }
+    showScreen(pinScreen);
 
 
-    if (vaultScreen) {
-
-        vaultScreen.classList.add(
-            'hidden'
-        );
-
-    }
-
-
-    if (pinScreen) {
-
-        pinScreen.classList.remove(
-            'hidden'
-        );
-
-    }
-
-
-    if (!pinScreenTitle) return;
-
-
+    // VERIFY PIN
     if (
         state === 'verify'
     ) {
 
-        pinScreenTitle.textContent =
-            'Enter Secret PIN';
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Enter Secret PIN';
+
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter your 4-digit security PIN to unlock your private vault.';
+
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.remove(
+                'hidden'
+            );
+
+        }
 
     }
 
+
+    // SET NEW PIN
     else if (
         state === 'set_new'
     ) {
 
-        pinScreenTitle.textContent =
-            'Set New PIN';
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Set New PIN';
+
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter your new 4-digit PIN.';
+
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.add(
+                'hidden'
+            );
+
+        }
 
     }
 
+
+    // CONFIRM NEW PIN
     else if (
         state === 'confirm_new'
     ) {
 
-        pinScreenTitle.textContent =
-            'Confirm New PIN';
+        if (pinScreenTitle) {
+
+            pinScreenTitle.textContent =
+                'Confirm New PIN';
+
+        }
+
+        if (pinDescription) {
+
+            pinDescription.textContent =
+                'Enter the same PIN again to confirm.';
+
+        }
+
+        if (forgotPinBtn) {
+
+            forgotPinBtn.classList.add(
+                'hidden'
+            );
+
+        }
 
     }
 
@@ -565,7 +763,6 @@ if (pinPad) {
                     '.pin-btn'
                 );
 
-
             if (!button) return;
 
 
@@ -585,7 +782,6 @@ if (pinPad) {
                     enteredPin +=
                         pinValue;
 
-
                     updatePinDots();
 
                 }
@@ -604,7 +800,6 @@ if (pinPad) {
                         0,
                         -1
                     );
-
 
                 updatePinDots();
 
@@ -628,7 +823,7 @@ if (pinPad) {
 
 
 // ==========================================
-// PIN DOTS
+// UPDATE PIN DOTS
 // ==========================================
 
 function updatePinDots() {
@@ -671,14 +866,18 @@ function handlePinSubmit() {
         enteredPin.length !== 4
     ) {
 
+        showToast(
+            'Enter all 4 digits'
+        );
+
         return;
 
     }
 
 
-    // --------------------------
+    // ==================================
     // VERIFY PIN
-    // --------------------------
+    // ==================================
 
     if (
         pinState === 'verify'
@@ -688,40 +887,27 @@ function handlePinSubmit() {
             enteredPin === storedPin
         ) {
 
-            if (pinScreen) {
-
-                pinScreen.classList.add(
-                    'hidden'
-                );
-
-            }
-
-
-            if (vaultScreen) {
-
-                vaultScreen.classList.remove(
-                    'hidden'
-                );
-
-            }
-
-
             enteredPin = '';
 
             updatePinDots();
+
+            showScreen(
+                vaultScreen
+            );
 
             renderVaultMedia();
 
             updateStorageInfo();
 
+            updatePremiumUI();
+
         }
 
         else {
 
-            alert(
+            showToast(
                 'Incorrect PIN'
             );
-
 
             enteredPin = '';
 
@@ -732,9 +918,9 @@ function handlePinSubmit() {
     }
 
 
-    // --------------------------
+    // ==================================
     // SET NEW PIN
-    // --------------------------
+    // ==================================
 
     else if (
         pinState === 'set_new'
@@ -743,7 +929,6 @@ function handlePinSubmit() {
         tempNewPin =
             enteredPin;
 
-
         openPinScreen(
             'confirm_new'
         );
@@ -751,9 +936,9 @@ function handlePinSubmit() {
     }
 
 
-    // --------------------------
+    // ==================================
     // CONFIRM NEW PIN
-    // --------------------------
+    // ==================================
 
     else if (
         pinState === 'confirm_new'
@@ -773,52 +958,38 @@ function handlePinSubmit() {
             );
 
 
-            alert(
-                'PIN successfully changed!'
-            );
-
-
             enteredPin = '';
 
             tempNewPin = '';
 
-
             updatePinDots();
 
 
-            if (pinScreen) {
-
-                pinScreen.classList.add(
-                    'hidden'
-                );
-
-            }
+            showToast(
+                'PIN changed successfully'
+            );
 
 
-            if (vaultScreen) {
-
-                vaultScreen.classList.remove(
-                    'hidden'
-                );
-
-            }
+            showScreen(
+                vaultScreen
+            );
 
 
             renderVaultMedia();
 
             updateStorageInfo();
 
+            updatePremiumUI();
+
         }
 
         else {
 
-            alert(
-                'PINs do not match. Try again.'
+            showToast(
+                'PINs do not match'
             );
 
-
             tempNewPin = '';
-
 
             openPinScreen(
                 'set_new'
@@ -833,6 +1004,8 @@ function handlePinSubmit() {
 
 // ==========================================
 // FORGOT PIN
+// IMPORTANT:
+// OLD PIN NEVER DISPLAYED
 // ==========================================
 
 if (forgotPinBtn) {
@@ -844,17 +1017,73 @@ if (forgotPinBtn) {
             event.preventDefault();
 
 
-            /*
-             * NOTE:
-             * This is demo behavior.
-             *
-             * In a real secure vault you
-             * should NOT reveal the PIN.
-             */
+            // Premium inactive
+            if (
+                !isPremiumActive()
+            ) {
 
-            alert(
-                'Default PIN is 1234'
+                if (upgradeModal) {
+
+                    upgradeModal.classList.remove(
+                        'hidden'
+                    );
+
+                }
+
+                return;
+
+            }
+
+
+            // Premium active
+            // Reset only
+            // Never reveal old PIN
+
+            openPinScreen(
+                'set_new'
             );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// PIN BACK BUTTON
+// ==========================================
+
+if (pinBackBtn) {
+
+    pinBackBtn.addEventListener(
+        'click',
+        function () {
+
+            enteredPin = '';
+
+            tempNewPin = '';
+
+            updatePinDots();
+
+
+            if (
+                pinState === 'set_new' ||
+                pinState === 'confirm_new'
+            ) {
+
+                showScreen(
+                    vaultScreen
+                );
+
+            }
+
+            else {
+
+                showScreen(
+                    calcApp
+                );
+
+            }
 
         }
     );
@@ -872,24 +1101,6 @@ if (lockVaultBtn) {
         'click',
         function () {
 
-            if (vaultScreen) {
-
-                vaultScreen.classList.add(
-                    'hidden'
-                );
-
-            }
-
-
-            if (calcApp) {
-
-                calcApp.classList.remove(
-                    'hidden'
-                );
-
-            }
-
-
             currentInput = '0';
 
             calculationHistory = '';
@@ -900,6 +1111,11 @@ if (lockVaultBtn) {
             updateDisplay();
 
             updatePinDots();
+
+
+            showScreen(
+                calcApp
+            );
 
         }
     );
@@ -928,7 +1144,7 @@ if (changePinBtn) {
 
 
 // ==========================================
-// UPLOAD BUTTONS
+// PHOTO UPLOAD BUTTON
 // ==========================================
 
 if (
@@ -947,6 +1163,10 @@ if (
 
 }
 
+
+// ==========================================
+// VIDEO UPLOAD BUTTON
+// ==========================================
 
 if (
     tabVideos &&
@@ -1033,8 +1253,7 @@ function handleFiles(
         function (file) {
 
 
-            // Validate image
-
+            // IMAGE CHECK
             if (
                 type === 'image' &&
                 !file.type.startsWith(
@@ -1047,14 +1266,57 @@ function handleFiles(
             }
 
 
-            // Validate video
-
+            // VIDEO CHECK
             if (
                 type === 'video' &&
                 !file.type.startsWith(
                     'video/'
                 )
             ) {
+
+                return;
+
+            }
+
+
+            // ==================================
+            // 1GB STORAGE LIMIT
+            // ==================================
+
+            const currentBytes =
+                mediaFiles.reduce(
+                    function (
+                        total,
+                        item
+                    ) {
+
+                        return (
+                            total +
+                            Number(
+                                item.size || 0
+                            )
+                        );
+
+                    },
+                    0
+                );
+
+
+            const maxBytes =
+                STORAGE_LIMIT_MB *
+                1024 *
+                1024;
+
+
+            if (
+                currentBytes +
+                file.size >
+                maxBytes
+            ) {
+
+                showToast(
+                    '1 GB storage limit reached'
+                );
 
                 return;
 
@@ -1069,7 +1331,6 @@ function handleFiles(
                 function (
                     uploadEvent
                 ) {
-
 
                     const newFile = {
 
@@ -1115,8 +1376,8 @@ function handleFiles(
                         mediaFiles.pop();
 
 
-                        alert(
-                            'Browser storage is full. Please delete some files before adding more.'
+                        showToast(
+                            'Browser storage is full. Delete some files first.'
                         );
 
 
@@ -1140,7 +1401,7 @@ function handleFiles(
             reader.onerror =
                 function () {
 
-                    alert(
+                    showToast(
                         `Could not read ${file.name}`
                     );
 
@@ -1154,12 +1415,6 @@ function handleFiles(
         }
     );
 
-
-    /*
-     * Reset file inputs so the
-     * same file can be selected
-     * again later.
-     */
 
     if (photoInput) {
 
@@ -1233,22 +1488,19 @@ if (subTabVideos) {
 // SET FILTER
 // ==========================================
 
-function setSubFilter(filter) {
+function setSubFilter(
+    filter
+) {
 
     activeSubFilter =
         filter;
 
 
-    const buttons = [
-
+    [
         subTabAll,
         subTabPhotos,
         subTabVideos
-
-    ];
-
-
-    buttons.forEach(
+    ].forEach(
         function (button) {
 
             if (button) {
@@ -1316,12 +1568,6 @@ function renderVaultMedia() {
     mediaGrid.innerHTML = '';
 
 
-    const emptyState =
-        document.getElementById(
-            'emptyState'
-        );
-
-
     const filtered =
         mediaFiles.filter(
             function (item) {
@@ -1335,7 +1581,6 @@ function renderVaultMedia() {
 
                 }
 
-
                 return (
                     item.type ===
                     activeSubFilter
@@ -1346,7 +1591,6 @@ function renderVaultMedia() {
 
 
     // EMPTY STATE
-
     if (emptyState) {
 
         emptyState.style.display =
@@ -1367,7 +1611,6 @@ function renderVaultMedia() {
 
 
     // FILES
-
     filtered.forEach(
         function (item) {
 
@@ -1386,9 +1629,9 @@ function renderVaultMedia() {
 
 
             // IMAGE
-
             if (
-                item.type === 'image'
+                item.type ===
+                'image'
             ) {
 
                 mediaElement =
@@ -1413,7 +1656,6 @@ function renderVaultMedia() {
 
 
             // VIDEO
-
             else {
 
                 mediaElement =
@@ -1443,7 +1685,6 @@ function renderVaultMedia() {
 
 
             // DELETE BUTTON
-
             const deleteButton =
                 document.createElement(
                     'button'
@@ -1506,14 +1747,12 @@ function renderVaultMedia() {
 
 
             // OPEN PREVIEW
-
             div.addEventListener(
                 'click',
                 function () {
 
                     openPreview(
-                        item,
-                        item.url
+                        item
                     );
 
                 }
@@ -1606,18 +1845,12 @@ function updateStorageInfo() {
         (1024 * 1024);
 
 
-    // Visual storage target
-
-    const maxMb =
-        1024;
-
-
     const percent =
         Math.min(
             Math.round(
                 (
                     totalMb /
-                    maxMb
+                    STORAGE_LIMIT_MB
                 ) * 100
             ),
             100
@@ -1647,6 +1880,15 @@ function updateStorageInfo() {
 
     }
 
+
+    // ALWAYS 1GB
+    if (storageTotal) {
+
+        storageTotal.textContent =
+            '1 GB total';
+
+    }
+
 }
 
 
@@ -1654,10 +1896,7 @@ function updateStorageInfo() {
 // OPEN PREVIEW
 // ==========================================
 
-function openPreview(
-    item,
-    mediaUrl
-) {
+function openPreview(item) {
 
     if (
         !previewContainer ||
@@ -1677,7 +1916,6 @@ function openPreview(
 
 
     // IMAGE
-
     if (
         item.type === 'image'
     ) {
@@ -1689,7 +1927,7 @@ function openPreview(
 
 
         element.src =
-            mediaUrl;
+            item.url;
 
 
         element.alt =
@@ -1700,7 +1938,6 @@ function openPreview(
 
 
     // VIDEO
-
     else {
 
         element =
@@ -1710,7 +1947,7 @@ function openPreview(
 
 
         element.src =
-            mediaUrl;
+            item.url;
 
 
         element.controls =
@@ -1742,28 +1979,6 @@ function openPreview(
         'hidden'
     );
 
-
-    /*
-     * Add browser history state.
-     * Android back button will
-     * close preview instead of
-     * leaving the app.
-     */
-
-    if (
-        !history.state ||
-        !history.state.modalOpen
-    ) {
-
-        history.pushState(
-            {
-                modalOpen: true
-            },
-            ''
-        );
-
-    }
-
 }
 
 
@@ -1771,25 +1986,10 @@ function openPreview(
 // CLOSE PREVIEW
 // ==========================================
 
-function closePreviewModal(
-    useHistory = true
-) {
+function closePreviewModal() {
 
     if (!previewModal) return;
 
-
-    if (
-        previewModal.classList.contains(
-            'hidden'
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    // Stop video playback
 
     const video =
         previewContainer
@@ -1818,17 +2018,6 @@ function closePreviewModal(
 
     }
 
-
-    if (
-        useHistory &&
-        history.state &&
-        history.state.modalOpen
-    ) {
-
-        history.back();
-
-    }
-
 }
 
 
@@ -1840,20 +2029,14 @@ if (closePreviewBtn) {
 
     closePreviewBtn.addEventListener(
         'click',
-        function () {
-
-            closePreviewModal(
-                true
-            );
-
-        }
+        closePreviewModal
     );
 
 }
 
 
 // ==========================================
-// CLICK OUTSIDE PREVIEW
+// PREVIEW OUTSIDE CLICK
 // ==========================================
 
 if (previewModal) {
@@ -1867,9 +2050,7 @@ if (previewModal) {
                 previewModal
             ) {
 
-                closePreviewModal(
-                    true
-                );
+                closePreviewModal();
 
             }
 
@@ -1880,32 +2061,7 @@ if (previewModal) {
 
 
 // ==========================================
-// PHONE / BROWSER BACK BUTTON
-// ==========================================
-
-window.addEventListener(
-    'popstate',
-    function () {
-
-        if (
-            previewModal &&
-            !previewModal.classList.contains(
-                'hidden'
-            )
-        ) {
-
-            closePreviewModal(
-                false
-            );
-
-        }
-
-    }
-);
-
-
-// ==========================================
-// UPGRADE MODAL
+// OPEN PREMIUM MODAL
 // ==========================================
 
 if (
@@ -1916,6 +2072,21 @@ if (
     openUpgradeModal.addEventListener(
         'click',
         function () {
+
+
+            // Already Premium
+            if (
+                isPremiumActive()
+            ) {
+
+                showToast(
+                    'Pro+ already active. Storage remains 1 GB.'
+                );
+
+                return;
+
+            }
+
 
             upgradeModal.classList.remove(
                 'hidden'
@@ -1928,7 +2099,7 @@ if (
 
 
 // ==========================================
-// CLOSE UPGRADE MODAL
+// CLOSE PREMIUM MODAL
 // ==========================================
 
 if (
@@ -1951,7 +2122,7 @@ if (
 
 
 // ==========================================
-// CLICK OUTSIDE UPGRADE MODAL
+// MODAL OUTSIDE CLICK
 // ==========================================
 
 if (upgradeModal) {
@@ -1978,7 +2149,20 @@ if (upgradeModal) {
 
 
 // ==========================================
-// SUBSCRIBE PREMIUM
+// ACTIVATE PRO+
+// ==========================================
+//
+// IMPORTANT:
+//
+// Pro+ activates:
+// ✓ PIN reset
+// ✓ Premium status
+//
+// DOES NOT activate:
+// ✗ 10GB storage
+//
+// Storage stays 1GB
+//
 // ==========================================
 
 if (confirmSubscribeBtn) {
@@ -1987,9 +2171,18 @@ if (confirmSubscribeBtn) {
         'click',
         function () {
 
-            alert(
-                'Thank you for upgrading! Demo Mode'
+
+            localStorage.setItem(
+                'premium_active',
+                'true'
             );
+
+
+            premiumActive = true;
+
+
+            // DO NOT CHANGE STORAGE_LIMIT_MB
+            // DO NOT ENABLE 10GB HERE
 
 
             if (upgradeModal) {
@@ -1999,6 +2192,14 @@ if (confirmSubscribeBtn) {
                 );
 
             }
+
+
+            updatePremiumUI();
+
+
+            showToast(
+                'Pro+ activated. Storage remains 1 GB.'
+            );
 
         }
     );
@@ -2015,3 +2216,5 @@ updateDisplay();
 renderVaultMedia();
 
 updateStorageInfo();
+
+updatePremiumUI();
