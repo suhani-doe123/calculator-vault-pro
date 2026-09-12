@@ -1,6 +1,14 @@
-// ==========================================
-// DOM
-// ==========================================
+// ============================================================
+// CALCULATOR PRO - FULL SCRIPT
+// IndexedDB Local Media Storage
+// Premium PIN Recovery = $15/month
+// Premium does NOT automatically unlock 10GB
+// ============================================================
+
+
+// ============================================================
+// DOM ELEMENTS
+// ============================================================
 
 const calcApp = document.getElementById('calcApp');
 const pinScreen = document.getElementById('pinScreen');
@@ -12,10 +20,10 @@ const keypad = document.querySelector('.keypad');
 
 const pinDots = document.querySelectorAll('.dot');
 const pinPad = document.querySelector('.pin-pad');
-const pinDelete = document.getElementById('pinDelete');
-const pinSubmit = document.getElementById('pinSubmit');
+
 const pinScreenTitle = document.getElementById('pinScreenTitle');
 const pinDescription = document.getElementById('pinDescription');
+
 const forgotPinBtn = document.querySelector('.forgot-pin');
 const pinBackBtn = document.getElementById('pinBackBtn');
 
@@ -56,81 +64,96 @@ const upgradeBtn = document.getElementById('upgradeBtn');
 const toast = document.getElementById('toast');
 
 
-// ==========================================
-// APP STATE
-// ==========================================
+// ============================================================
+// APP SETTINGS
+// ============================================================
 
-let currentInput = '0';
-let calculationHistory = '';
+// FREE STORAGE DISPLAY LIMIT
+// Premium does NOT change this automatically.
+const FREE_STORAGE_LIMIT_MB = 1024;
+
+// Separate 10GB purchase flag.
+// Do NOT activate this from Premium subscription.
+let storage10GBActive =
+    localStorage.getItem('storage_10gb_active') === 'true';
+
+function getStorageLimitMB() {
+
+    return storage10GBActive
+        ? 10240
+        : FREE_STORAGE_LIMIT_MB;
+}
+
+
+// ============================================================
+// PIN SETTINGS
+// ============================================================
 
 let storedPin =
     localStorage.getItem('vault_pin') || '1234';
 
 let enteredPin = '';
-let pinState = 'verify';
 let tempNewPin = '';
+let pinState = 'verify';
+
+
+// ============================================================
+// CALCULATOR STATE
+// ============================================================
+
+let currentInput = '0';
+let calculationHistory = '';
+
+
+// ============================================================
+// MEDIA STATE
+// ============================================================
 
 let mediaFiles = [];
 let activeSubFilter = 'all';
 
+
+// ============================================================
+// PREMIUM STATE
+// ============================================================
+
+// IMPORTANT:
+//
+// Do not manually set:
+//
+// localStorage.setItem('premium_active', 'true')
+//
+// from Subscribe button.
+//
+// Premium should only become active after payment/server
+// verification.
+//
+// This local value is only a cached verified entitlement.
 let premiumActive =
-    localStorage.getItem('premium_active') === 'true';
+    localStorage.getItem('premium_verified') === 'true';
 
 
-// ==========================================
-// STORAGE LIMIT
-// Premium activate ஆனாலும் 1GB தான்
-// ==========================================
+// ============================================================
+// INDEXEDDB SETTINGS
+// ============================================================
 
-const STORAGE_LIMIT_MB = 1024;
+const DB_NAME = 'CalculatorProVault';
+const DB_VERSION = 1;
+const STORE_NAME = 'media';
 
-
-// ==========================================
-// LOAD SAVED MEDIA
-// ==========================================
-
-try {
-
-    const savedMedia =
-        localStorage.getItem('vault_media');
-
-    if (savedMedia) {
-
-        mediaFiles =
-            JSON.parse(savedMedia);
-
-        if (!Array.isArray(mediaFiles)) {
-
-            mediaFiles = [];
-
-        }
-
-    }
-
-} catch (error) {
-
-    console.error(
-        'Could not load vault media:',
-        error
-    );
-
-    mediaFiles = [];
-
-}
+let vaultDB = null;
 
 
-// ==========================================
+// ============================================================
 // TOAST
-// ==========================================
+// ============================================================
 
 function showToast(message) {
 
     if (!toast) {
 
         alert(message);
-
         return;
-
     }
 
     toast.textContent = message;
@@ -139,21 +162,17 @@ function showToast(message) {
 
     clearTimeout(showToast.timer);
 
-    showToast.timer = setTimeout(
-        function () {
+    showToast.timer = setTimeout(() => {
 
-            toast.classList.add('hidden');
+        toast.classList.add('hidden');
 
-        },
-        2200
-    );
-
+    }, 2300);
 }
 
 
-// ==========================================
+// ============================================================
 // SCREEN SWITCH
-// ==========================================
+// ============================================================
 
 function showScreen(screen) {
 
@@ -161,105 +180,301 @@ function showScreen(screen) {
         calcApp,
         pinScreen,
         vaultScreen
-    ].forEach(
-        function (item) {
+    ].forEach(item => {
 
-            if (item) {
-
-                item.classList.add('hidden');
-
-            }
-
+        if (item) {
+            item.classList.add('hidden');
         }
-    );
+
+    });
 
     if (screen) {
-
         screen.classList.remove('hidden');
-
     }
-
 }
 
 
-// ==========================================
-// PREMIUM CHECK
-// ==========================================
+// ============================================================
+// OPEN INDEXEDDB
+// ============================================================
 
-function isPremiumActive() {
+function openVaultDatabase() {
 
-    return (
-        localStorage.getItem(
-            'premium_active'
-        ) === 'true'
-    );
+    return new Promise((resolve, reject) => {
 
+        const request =
+            indexedDB.open(
+                DB_NAME,
+                DB_VERSION
+            );
+
+        request.onupgradeneeded = event => {
+
+            const db =
+                event.target.result;
+
+            if (
+                !db.objectStoreNames.contains(
+                    STORE_NAME
+                )
+            ) {
+
+                const store =
+                    db.createObjectStore(
+                        STORE_NAME,
+                        {
+                            keyPath: 'id',
+                            autoIncrement: true
+                        }
+                    );
+
+                store.createIndex(
+                    'type',
+                    'type',
+                    {
+                        unique: false
+                    }
+                );
+
+                store.createIndex(
+                    'createdAt',
+                    'createdAt',
+                    {
+                        unique: false
+                    }
+                );
+            }
+        };
+
+        request.onsuccess = event => {
+
+            vaultDB =
+                event.target.result;
+
+            resolve(vaultDB);
+        };
+
+        request.onerror = event => {
+
+            console.error(
+                'IndexedDB open error:',
+                event.target.error
+            );
+
+            reject(
+                event.target.error
+            );
+        };
+    });
 }
 
 
-// ==========================================
-// PREMIUM UI
-// ==========================================
+// ============================================================
+// ADD MEDIA TO INDEXEDDB
+// ============================================================
 
-function updatePremiumUI() {
+function addMediaToDB(file, type) {
 
-    premiumActive =
-        isPremiumActive();
+    return new Promise((resolve, reject) => {
 
-    if (premiumActive) {
+        if (!vaultDB) {
 
-        if (premiumBannerTitle) {
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
 
-            premiumBannerTitle.textContent =
-                'Pro+ Active';
-
+            return;
         }
 
-        if (premiumBannerText) {
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readwrite'
+            );
 
-            premiumBannerText.textContent =
-                'Premium features active. Storage remains 1 GB.';
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
 
+        const record = {
+
+            name:
+                file.name,
+
+            type:
+                type,
+
+            mimeType:
+                file.type,
+
+            size:
+                file.size,
+
+            blob:
+                file,
+
+            createdAt:
+                Date.now()
+        };
+
+        const request =
+            store.add(record);
+
+        request.onsuccess = () => {
+
+            resolve(
+                request.result
+            );
+        };
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// GET ALL MEDIA
+// ============================================================
+
+function getAllMediaFromDB() {
+
+    return new Promise((resolve, reject) => {
+
+        if (!vaultDB) {
+
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
+
+            return;
         }
 
-        if (upgradeBtn) {
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readonly'
+            );
 
-            upgradeBtn.textContent =
-                'Active';
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
 
+        const request =
+            store.getAll();
+
+        request.onsuccess = () => {
+
+            resolve(
+                request.result || []
+            );
+        };
+
+        request.onerror = () => {
+
+            reject(
+                request.error
+            );
+        };
+    });
+}
+
+
+// ============================================================
+// DELETE MEDIA FROM INDEXEDDB
+// ============================================================
+
+function deleteMediaFromDB(id) {
+
+    return new Promise((resolve, reject) => {
+
+        if (!vaultDB) {
+
+            reject(
+                new Error(
+                    'Database not ready'
+                )
+            );
+
+            return;
         }
 
-    } else {
+        const transaction =
+            vaultDB.transaction(
+                STORE_NAME,
+                'readwrite'
+            );
 
-        if (premiumBannerTitle) {
+        const store =
+            transaction.objectStore(
+                STORE_NAME
+            );
 
-            premiumBannerTitle.textContent =
-                'Unlock Pro+ Features';
+        const request =
+            store.delete(id);
 
-        }
+        request.onsuccess = () => {
 
-        if (premiumBannerText) {
+            resolve();
+        };
 
-            premiumBannerText.textContent =
-                'Activate premium features.';
+        request.onerror = () => {
 
-        }
+            reject(
+                request.error
+            );
+        };
+    });
+}
 
-        if (upgradeBtn) {
 
-            upgradeBtn.textContent =
-                'Upgrade';
+// ============================================================
+// LOAD MEDIA
+// ============================================================
 
-        }
+async function loadMediaFiles() {
 
+    try {
+
+        mediaFiles =
+            await getAllMediaFromDB();
+
+        mediaFiles.sort(
+            (a, b) =>
+                b.createdAt -
+                a.createdAt
+        );
+
+        renderVaultMedia();
+        updateStorageInfo();
+
+    } catch (error) {
+
+        console.error(
+            'Load media error:',
+            error
+        );
+
+        showToast(
+            'Could not load local media'
+        );
     }
-
 }
 
 
-// ==========================================
+// ============================================================
 // CALCULATOR
-// ==========================================
+// ============================================================
 
 if (keypad) {
 
@@ -279,10 +494,6 @@ if (keypad) {
                 key.dataset.key;
 
 
-            // ==================================
-            // RESET AFTER ERROR
-            // ==================================
-
             if (
                 currentInput === 'Error' &&
                 value !== undefined
@@ -298,14 +509,10 @@ if (keypad) {
                 updateDisplay();
 
                 return;
-
             }
 
 
-            // ==================================
-            // NUMBER / OPERATOR
-            // ==================================
-
+            // VALUE
             if (value !== undefined) {
 
                 const operators = [
@@ -320,21 +527,11 @@ if (keypad) {
                     operators.includes(value)
                 ) {
 
-                    if (
-                        currentInput === 'Error'
-                    ) {
-
-                        currentInput = '0';
-
-                    }
-
-                    const lastCharacter =
+                    const last =
                         currentInput.slice(-1);
 
                     if (
-                        operators.includes(
-                            lastCharacter
-                        )
+                        operators.includes(last)
                     ) {
 
                         currentInput =
@@ -346,29 +543,31 @@ if (keypad) {
                     } else {
 
                         currentInput += value;
-
                     }
 
                 }
+
 
                 else if (
                     value === '.'
                 ) {
 
-                    const currentNumber =
+                    const part =
                         currentInput
-                            .split(/[+\-*/]/)
+                            .split(
+                                /[+\-*/]/
+                            )
                             .pop();
 
                     if (
-                        !currentNumber.includes('.')
+                        !part.includes('.')
                     ) {
 
                         currentInput += '.';
-
                     }
 
                 }
+
 
                 else {
 
@@ -376,86 +575,55 @@ if (keypad) {
                         currentInput === '0'
                     ) {
 
-                        currentInput = value;
+                        currentInput =
+                            value;
 
                     } else {
 
-                        currentInput += value;
-
+                        currentInput +=
+                            value;
                     }
-
                 }
-
             }
 
 
-            // ==================================
             // CLEAR
-            // ==================================
-
             else if (
                 keyType === 'clear'
             ) {
 
                 currentInput = '0';
-
                 calculationHistory = '';
-
             }
 
 
-            // ==================================
             // DELETE
-            // ==================================
-
             else if (
                 keyType === 'delete'
             ) {
 
-                if (
-                    currentInput === 'Error'
-                ) {
-
-                    currentInput = '0';
-
-                } else {
-
-                    currentInput =
-                        currentInput.length > 1
-                            ? currentInput.slice(
-                                0,
-                                -1
-                            )
-                            : '0';
-
-                }
-
+                currentInput =
+                    currentInput.length > 1
+                        ? currentInput.slice(
+                            0,
+                            -1
+                        )
+                        : '0';
             }
 
 
-            // ==================================
             // SQRT
-            // ==================================
-
             else if (
                 keyType === 'sqrt'
             ) {
 
-                try {
+                const number =
+                    Number(currentInput);
 
-                    const number =
-                        Number(currentInput);
-
-                    if (
-                        !Number.isFinite(number) ||
-                        number < 0
-                    ) {
-
-                        throw new Error(
-                            'Invalid square root'
-                        );
-
-                    }
+                if (
+                    Number.isFinite(number) &&
+                    number >= 0
+                ) {
 
                     calculationHistory =
                         `√(${currentInput})`;
@@ -465,37 +633,25 @@ if (keypad) {
                             Math.sqrt(number)
                         );
 
-                } catch (error) {
+                } else {
 
                     currentInput =
                         'Error';
-
                 }
-
             }
 
 
-            // ==================================
             // EQUAL
-            // ==================================
-
             else if (
                 keyType === 'equal'
             ) {
 
 
-                // ==================================
                 // SECRET VAULT TRIGGER
-                // PIN + =
-                // ==================================
 
                 if (
                     currentInput === storedPin
                 ) {
-
-                    openPinScreen(
-                        'verify'
-                    );
 
                     currentInput = '0';
 
@@ -503,14 +659,13 @@ if (keypad) {
 
                     updateDisplay();
 
-                    return;
+                    openPinScreen(
+                        'verify'
+                    );
 
+                    return;
                 }
 
-
-                // ==================================
-                // NORMAL CALCULATION
-                // ==================================
 
                 try {
 
@@ -522,7 +677,6 @@ if (keypad) {
                         throw new Error(
                             'Invalid expression'
                         );
-
                     }
 
                     const result =
@@ -537,7 +691,6 @@ if (keypad) {
                         throw new Error(
                             'Invalid result'
                         );
-
                     }
 
                     calculationHistory =
@@ -550,22 +703,19 @@ if (keypad) {
 
                     currentInput =
                         'Error';
-
                 }
-
             }
 
-            updateDisplay();
 
+            updateDisplay();
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // UPDATE DISPLAY
-// ==========================================
+// ============================================================
 
 function updateDisplay() {
 
@@ -573,42 +723,37 @@ function updateDisplay() {
 
         display.textContent =
             currentInput;
-
     }
 
     if (historyDisplay) {
 
         historyDisplay.textContent =
             calculationHistory;
-
     }
-
 }
 
 
-// ==========================================
+// ============================================================
 // DOUBLE CLICK DISPLAY
-// ==========================================
+// ============================================================
 
 if (display) {
 
     display.addEventListener(
         'dblclick',
-        function () {
+        () => {
 
             openPinScreen(
                 'verify'
             );
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // OPEN PIN SCREEN
-// ==========================================
+// ============================================================
 
 function openPinScreen(state) {
 
@@ -618,10 +763,11 @@ function openPinScreen(state) {
 
     updatePinDots();
 
-    showScreen(pinScreen);
+    showScreen(
+        pinScreen
+    );
 
 
-    // VERIFY
     if (
         state === 'verify'
     ) {
@@ -630,14 +776,12 @@ function openPinScreen(state) {
 
             pinScreenTitle.textContent =
                 'Enter Secret PIN';
-
         }
 
         if (pinDescription) {
 
             pinDescription.textContent =
                 'Enter your 4-digit security PIN.';
-
         }
 
         if (forgotPinBtn) {
@@ -645,13 +789,10 @@ function openPinScreen(state) {
             forgotPinBtn.classList.remove(
                 'hidden'
             );
-
         }
-
     }
 
 
-    // SET NEW
     else if (
         state === 'set_new'
     ) {
@@ -660,14 +801,12 @@ function openPinScreen(state) {
 
             pinScreenTitle.textContent =
                 'Set New PIN';
-
         }
 
         if (pinDescription) {
 
             pinDescription.textContent =
                 'Enter your new 4-digit PIN.';
-
         }
 
         if (forgotPinBtn) {
@@ -675,13 +814,10 @@ function openPinScreen(state) {
             forgotPinBtn.classList.add(
                 'hidden'
             );
-
         }
-
     }
 
 
-    // CONFIRM
     else if (
         state === 'confirm_new'
     ) {
@@ -690,14 +826,12 @@ function openPinScreen(state) {
 
             pinScreenTitle.textContent =
                 'Confirm New PIN';
-
         }
 
         if (pinDescription) {
 
             pinDescription.textContent =
                 'Enter the same PIN again.';
-
         }
 
         if (forgotPinBtn) {
@@ -705,17 +839,14 @@ function openPinScreen(state) {
             forgotPinBtn.classList.add(
                 'hidden'
             );
-
         }
-
     }
-
 }
 
 
-// ==========================================
+// ============================================================
 // PIN KEYPAD
-// ==========================================
+// ============================================================
 
 if (pinPad) {
 
@@ -730,13 +861,12 @@ if (pinPad) {
 
             if (!button) return;
 
-            const pinValue =
+            const number =
                 button.dataset.pin;
 
 
-            // NUMBER
             if (
-                pinValue !== undefined
+                number !== undefined
             ) {
 
                 if (
@@ -744,16 +874,13 @@ if (pinPad) {
                 ) {
 
                     enteredPin +=
-                        pinValue;
+                        number;
 
                     updatePinDots();
-
                 }
-
             }
 
 
-            // DELETE
             else if (
                 button.id ===
                 'pinDelete'
@@ -766,34 +893,29 @@ if (pinPad) {
                     );
 
                 updatePinDots();
-
             }
 
 
-            // SUBMIT
             else if (
                 button.id ===
                 'pinSubmit'
             ) {
 
                 handlePinSubmit();
-
             }
-
         }
     );
-
 }
 
 
-// ==========================================
-// UPDATE DOTS
-// ==========================================
+// ============================================================
+// UPDATE PIN DOTS
+// ============================================================
 
 function updatePinDots() {
 
     pinDots.forEach(
-        function (dot, index) {
+        (dot, index) => {
 
             if (
                 index <
@@ -809,20 +931,17 @@ function updatePinDots() {
                 dot.classList.remove(
                     'filled'
                 );
-
             }
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // PIN SUBMIT
-// ==========================================
+// ============================================================
 
-function handlePinSubmit() {
+async function handlePinSubmit() {
 
     if (
         enteredPin.length !== 4
@@ -833,14 +952,10 @@ function handlePinSubmit() {
         );
 
         return;
-
     }
 
 
-    // ==================================
     // VERIFY
-    // ==================================
-
     if (
         pinState === 'verify'
     ) {
@@ -857,9 +972,7 @@ function handlePinSubmit() {
                 vaultScreen
             );
 
-            renderVaultMedia();
-
-            updateStorageInfo();
+            await loadMediaFiles();
 
             updatePremiumUI();
 
@@ -872,16 +985,11 @@ function handlePinSubmit() {
             enteredPin = '';
 
             updatePinDots();
-
         }
-
     }
 
 
-    // ==================================
-    // SET NEW
-    // ==================================
-
+    // SET NEW PIN
     else if (
         pinState === 'set_new'
     ) {
@@ -892,20 +1000,18 @@ function handlePinSubmit() {
         openPinScreen(
             'confirm_new'
         );
-
     }
 
 
-    // ==================================
-    // CONFIRM NEW
-    // ==================================
-
+    // CONFIRM NEW PIN
     else if (
-        pinState === 'confirm_new'
+        pinState ===
+        'confirm_new'
     ) {
 
         if (
-            enteredPin === tempNewPin
+            enteredPin ===
+            tempNewPin
         ) {
 
             storedPin =
@@ -917,7 +1023,6 @@ function handlePinSubmit() {
             );
 
             enteredPin = '';
-
             tempNewPin = '';
 
             updatePinDots();
@@ -930,11 +1035,7 @@ function handlePinSubmit() {
                 vaultScreen
             );
 
-            renderVaultMedia();
-
-            updateStorageInfo();
-
-            updatePremiumUI();
+            await loadMediaFiles();
 
         } else {
 
@@ -947,26 +1048,27 @@ function handlePinSubmit() {
             openPinScreen(
                 'set_new'
             );
-
         }
-
     }
-
 }
 
 
-// ==========================================
+// ============================================================
 // FORGOT PIN
-// ==========================================
+// ============================================================
 //
-// IMPORTANT:
-// Forgot PIN click:
-// 1. PIN காட்டாது
-// 2. Reset screen open ஆகாது
-// 3. "Please Activate Pro" வரும்
-// 4. Pro modal open ஆகும்
+// FREE USER:
 //
-// ==========================================
+// Forgot PIN
+//     ↓
+// Premium Required
+// $15 / month
+//
+// DO NOT reveal PIN.
+//
+// DO NOT automatically activate Premium.
+//
+// ============================================================
 
 if (forgotPinBtn) {
 
@@ -977,28 +1079,345 @@ if (forgotPinBtn) {
             event.preventDefault();
 
 
-            showToast(
-                'Please Activate Pro'
-            );
+            // Verified Premium User
+            if (
+                isPremiumVerified()
+            ) {
 
-
-            if (upgradeModal) {
-
-                upgradeModal.classList.remove(
-                    'hidden'
+                openPinScreen(
+                    'set_new'
                 );
 
+                return;
             }
 
+
+            // Free user
+            showToast(
+                'Premium Required - $15/month'
+            );
+
+            openPremiumModal();
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
+// PREMIUM VERIFIED CHECK
+// ============================================================
+
+function isPremiumVerified() {
+
+    return (
+        localStorage.getItem(
+            'premium_verified'
+        ) === 'true'
+    );
+}
+
+
+// ============================================================
+// OPEN PREMIUM MODAL
+// ============================================================
+
+function openPremiumModal() {
+
+    if (!upgradeModal) {
+
+        showToast(
+            'Premium Required - $15/month'
+        );
+
+        return;
+    }
+
+    upgradeModal.classList.remove(
+        'hidden'
+    );
+}
+
+
+// ============================================================
+// PREMIUM UI
+// ============================================================
+
+function updatePremiumUI() {
+
+    premiumActive =
+        isPremiumVerified();
+
+
+    if (premiumActive) {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Premium Active';
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                'PIN Recovery active. Storage plan is separate.';
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                'Active';
+        }
+
+    } else {
+
+        if (premiumBannerTitle) {
+
+            premiumBannerTitle.textContent =
+                'Calculator Pro Premium';
+        }
+
+        if (premiumBannerText) {
+
+            premiumBannerText.textContent =
+                '$15/month • PIN Recovery & Premium Features';
+        }
+
+        if (upgradeBtn) {
+
+            upgradeBtn.textContent =
+                '$15 / Month';
+        }
+    }
+}
+
+
+// ============================================================
+// OPEN PREMIUM BUTTON
+// ============================================================
+
+if (openUpgradeModal) {
+
+    openUpgradeModal.addEventListener(
+        'click',
+        function () {
+
+            if (
+                isPremiumVerified()
+            ) {
+
+                showToast(
+                    'Premium already active'
+                );
+
+                return;
+            }
+
+            openPremiumModal();
+        }
+    );
+}
+
+
+// ============================================================
+// CLOSE PREMIUM MODAL
+// ============================================================
+
+if (
+    closeModalBtn &&
+    upgradeModal
+) {
+
+    closeModalBtn.addEventListener(
+        'click',
+        function () {
+
+            upgradeModal.classList.add(
+                'hidden'
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// SUBSCRIBE BUTTON
+// ============================================================
+//
+// IMPORTANT:
+//
+// THIS BUTTON MUST NOT:
+//
+// localStorage.setItem(
+//     'premium_verified',
+//     'true'
+// );
+//
+// Premium must only be activated after real payment
+// verification.
+//
+// Replace PAYMENT_URL with your payment / Play Store flow.
+//
+// ============================================================
+
+if (confirmSubscribeBtn) {
+
+    confirmSubscribeBtn.addEventListener(
+        'click',
+        function () {
+
+            startPremiumSubscription();
+        }
+    );
+}
+
+
+// ============================================================
+// START PREMIUM SUBSCRIPTION
+// ============================================================
+
+function startPremiumSubscription() {
+
+    showToast(
+        'Opening $15/month subscription...'
+    );
+
+
+    /*
+    ========================================================
+    OPTION A - PAYMENT WEBSITE
+    ========================================================
+
+    Example:
+
+    window.location.href =
+        'https://yourwebsite.com/subscribe';
+
+    ========================================================
+    OPTION B - ANDROID / GOOGLE PLAY BILLING
+    ========================================================
+
+    Your Android WebView can expose a native bridge:
+
+    window.Android.startPremiumSubscription();
+
+    ========================================================
+    */
+
+
+    if (
+        window.Android &&
+        typeof window.Android
+            .startPremiumSubscription ===
+            'function'
+    ) {
+
+        window.Android
+            .startPremiumSubscription();
+
+        return;
+    }
+
+
+    // No payment system connected yet
+
+    showToast(
+        'Connect your payment system first'
+    );
+}
+
+
+// ============================================================
+// PAYMENT SUCCESS CALLBACK
+// ============================================================
+//
+// Android / backend should call this function
+// ONLY AFTER payment is successfully verified.
+//
+// Example from Android:
+//
+// webView.evaluateJavascript(
+//   "premiumPaymentVerified('token')",
+//   null
+// );
+//
+// For real production:
+// verify receipt/token with your backend first.
+//
+// ============================================================
+
+window.premiumPaymentVerified =
+    function (
+        verificationToken
+    ) {
+
+        if (
+            !verificationToken
+        ) {
+
+            showToast(
+                'Payment verification failed'
+            );
+
+            return;
+        }
+
+
+        // This is only called AFTER external verification.
+
+        localStorage.setItem(
+            'premium_verified',
+            'true'
+        );
+
+
+        premiumActive = true;
+
+
+        if (upgradeModal) {
+
+            upgradeModal.classList.add(
+                'hidden'
+            );
+        }
+
+
+        updatePremiumUI();
+
+
+        showToast(
+            'Premium Activated'
+        );
+
+
+        // IMPORTANT:
+        // DO NOT enable 10GB here.
+    };
+
+
+// ============================================================
+// PREMIUM EXPIRED CALLBACK
+// ============================================================
+
+window.premiumSubscriptionExpired =
+    function () {
+
+        localStorage.removeItem(
+            'premium_verified'
+        );
+
+        premiumActive = false;
+
+        updatePremiumUI();
+
+        showToast(
+            'Premium subscription expired'
+        );
+    };
+
+
+// ============================================================
 // PIN BACK
-// ==========================================
+// ============================================================
 
 if (pinBackBtn) {
 
@@ -1007,7 +1426,6 @@ if (pinBackBtn) {
         function () {
 
             enteredPin = '';
-
             tempNewPin = '';
 
             updatePinDots();
@@ -1015,7 +1433,8 @@ if (pinBackBtn) {
 
             if (
                 pinState === 'set_new' ||
-                pinState === 'confirm_new'
+                pinState ===
+                    'confirm_new'
             ) {
 
                 showScreen(
@@ -1027,18 +1446,15 @@ if (pinBackBtn) {
                 showScreen(
                     calcApp
                 );
-
             }
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // LOCK VAULT
-// ==========================================
+// ============================================================
 
 if (lockVaultBtn) {
 
@@ -1047,28 +1463,23 @@ if (lockVaultBtn) {
         function () {
 
             currentInput = '0';
-
             calculationHistory = '';
-
             enteredPin = '';
 
             updateDisplay();
-
             updatePinDots();
 
             showScreen(
                 calcApp
             );
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // CHANGE PIN
-// ==========================================
+// ============================================================
 
 if (changePinBtn) {
 
@@ -1079,16 +1490,14 @@ if (changePinBtn) {
             openPinScreen(
                 'set_new'
             );
-
         }
     );
-
 }
 
 
-// ==========================================
-// PHOTO BUTTON
-// ==========================================
+// ============================================================
+// PHOTO UPLOAD
+// ============================================================
 
 if (
     tabPhotos &&
@@ -1100,16 +1509,14 @@ if (
         function () {
 
             photoInput.click();
-
         }
     );
-
 }
 
 
-// ==========================================
-// VIDEO BUTTON
-// ==========================================
+// ============================================================
+// VIDEO UPLOAD
+// ============================================================
 
 if (
     tabVideos &&
@@ -1121,16 +1528,14 @@ if (
         function () {
 
             videoInput.click();
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // PHOTO INPUT
-// ==========================================
+// ============================================================
 
 if (photoInput) {
 
@@ -1142,16 +1547,14 @@ if (photoInput) {
                 event.target.files,
                 'image'
             );
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // VIDEO INPUT
-// ==========================================
+// ============================================================
 
 if (videoInput) {
 
@@ -1163,18 +1566,16 @@ if (videoInput) {
                 event.target.files,
                 'video'
             );
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // HANDLE FILES
-// ==========================================
+// ============================================================
 
-function handleFiles(
+async function handleFiles(
     files,
     type
 ) {
@@ -1187,203 +1588,145 @@ function handleFiles(
     ) {
 
         return;
-
     }
 
 
-    selectedFiles.forEach(
-        function (file) {
+    for (
+        const file of selectedFiles
+    ) {
 
 
-            if (
-                type === 'image' &&
-                !file.type.startsWith(
-                    'image/'
-                )
-            ) {
+        // IMAGE VALIDATION
 
-                return;
+        if (
+            type === 'image' &&
+            !file.type.startsWith(
+                'image/'
+            )
+        ) {
 
-            }
-
-
-            if (
-                type === 'video' &&
-                !file.type.startsWith(
-                    'video/'
-                )
-            ) {
-
-                return;
-
-            }
+            continue;
+        }
 
 
-            // ==================================
-            // STORAGE CHECK
-            // ==================================
+        // VIDEO VALIDATION
 
-            const currentBytes =
-                mediaFiles.reduce(
-                    function (
-                        total,
-                        item
-                    ) {
+        if (
+            type === 'video' &&
+            !file.type.startsWith(
+                'video/'
+            )
+        ) {
 
-                        return (
-                            total +
-                            Number(
-                                item.size || 0
-                            )
-                        );
-
-                    },
-                    0
-                );
+            continue;
+        }
 
 
-            const maxBytes =
-                STORAGE_LIMIT_MB *
-                1024 *
-                1024;
+        // STORAGE CHECK
+
+        const usedBytes =
+            calculateUsedBytes();
+
+        const limitBytes =
+            getStorageLimitMB() *
+            1024 *
+            1024;
 
 
-            if (
-                currentBytes +
-                file.size >
-                maxBytes
-            ) {
+        if (
+            usedBytes +
+            file.size >
+            limitBytes
+        ) {
 
-                showToast(
-                    '1 GB storage limit reached'
-                );
-
-                return;
-
-            }
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (
-                    uploadEvent
-                ) {
-
-                    const newFile = {
-
-                        id:
-                            Date.now() +
-                            Math.random(),
-
-                        type:
-                            type,
-
-                        url:
-                            uploadEvent
-                                .target
-                                .result,
-
-                        size:
-                            file.size,
-
-                        name:
-                            file.name
-
-                    };
-
-
-                    mediaFiles.push(
-                        newFile
-                    );
-
-
-                    try {
-
-                        localStorage.setItem(
-                            'vault_media',
-                            JSON.stringify(
-                                mediaFiles
-                            )
-                        );
-
-                    } catch (error) {
-
-                        mediaFiles.pop();
-
-                        showToast(
-                            'Browser storage is full'
-                        );
-
-                        console.error(
-                            error
-                        );
-
-                        return;
-
-                    }
-
-
-                    renderVaultMedia();
-
-                    updateStorageInfo();
-
-                };
-
-
-            reader.onerror =
-                function () {
-
-                    showToast(
-                        'Could not read file'
-                    );
-
-                };
-
-
-            reader.readAsDataURL(
-                file
+            showToast(
+                storage10GBActive
+                    ? '10 GB storage limit reached'
+                    : '1 GB storage limit reached'
             );
 
+            continue;
         }
-    );
+
+
+        try {
+
+            await addMediaToDB(
+                file,
+                type
+            );
+
+            showToast(
+                type === 'image'
+                    ? 'Photo saved locally'
+                    : 'Video saved locally'
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Save error:',
+                error
+            );
+
+            showToast(
+                'Could not save file'
+            );
+        }
+    }
 
 
     if (photoInput) {
 
         photoInput.value = '';
-
     }
-
 
     if (videoInput) {
 
         videoInput.value = '';
-
     }
 
+
+    await loadMediaFiles();
 }
 
 
-// ==========================================
-// FILTERS
-// ==========================================
+// ============================================================
+// USED STORAGE
+// ============================================================
+
+function calculateUsedBytes() {
+
+    return mediaFiles.reduce(
+        (total, item) => {
+
+            return (
+                total +
+                Number(
+                    item.size || 0
+                )
+            );
+        },
+        0
+    );
+}
+
+
+// ============================================================
+// FILTER BUTTONS
+// ============================================================
 
 if (subTabAll) {
 
     subTabAll.addEventListener(
         'click',
-        function () {
+        () => {
 
             setSubFilter(
                 'all'
             );
-
         }
     );
-
 }
 
 
@@ -1391,15 +1734,13 @@ if (subTabPhotos) {
 
     subTabPhotos.addEventListener(
         'click',
-        function () {
+        () => {
 
             setSubFilter(
                 'image'
             );
-
         }
     );
-
 }
 
 
@@ -1407,21 +1748,19 @@ if (subTabVideos) {
 
     subTabVideos.addEventListener(
         'click',
-        function () {
+        () => {
 
             setSubFilter(
                 'video'
             );
-
         }
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // SET FILTER
-// ==========================================
+// ============================================================
 
 function setSubFilter(
     filter
@@ -1435,19 +1774,15 @@ function setSubFilter(
         subTabAll,
         subTabPhotos,
         subTabVideos
-    ].forEach(
-        function (button) {
+    ].forEach(button => {
 
-            if (button) {
+        if (button) {
 
-                button.classList.remove(
-                    'active'
-                );
-
-            }
-
+            button.classList.remove(
+                'active'
+            );
         }
-    );
+    });
 
 
     if (
@@ -1458,7 +1793,6 @@ function setSubFilter(
         subTabAll.classList.add(
             'active'
         );
-
     }
 
 
@@ -1470,7 +1804,6 @@ function setSubFilter(
         subTabPhotos.classList.add(
             'active'
         );
-
     }
 
 
@@ -1482,18 +1815,16 @@ function setSubFilter(
         subTabVideos.classList.add(
             'active'
         );
-
     }
 
 
     renderVaultMedia();
-
 }
 
 
-// ==========================================
+// ============================================================
 // RENDER MEDIA
-// ==========================================
+// ============================================================
 
 function renderVaultMedia() {
 
@@ -1504,25 +1835,21 @@ function renderVaultMedia() {
 
 
     const filtered =
-        mediaFiles.filter(
-            function (item) {
+        mediaFiles.filter(item => {
 
-                if (
-                    activeSubFilter ===
-                    'all'
-                ) {
+            if (
+                activeSubFilter ===
+                'all'
+            ) {
 
-                    return true;
-
-                }
-
-                return (
-                    item.type ===
-                    activeSubFilter
-                );
-
+                return true;
             }
-        );
+
+            return (
+                item.type ===
+                activeSubFilter
+            );
+        });
 
 
     if (emptyState) {
@@ -1531,249 +1858,193 @@ function renderVaultMedia() {
             filtered.length === 0
                 ? 'flex'
                 : 'none';
-
     }
 
 
-    if (
-        filtered.length === 0
-    ) {
+    filtered.forEach(item => {
 
-        return;
+        const card =
+            document.createElement(
+                'div'
+            );
 
-    }
-
-
-    filtered.forEach(
-        function (item) {
+        card.className =
+            'media-item';
 
 
-            const div =
+        // Create temporary object URL
+        const objectURL =
+            URL.createObjectURL(
+                item.blob
+            );
+
+
+        let mediaElement;
+
+
+        // IMAGE
+        if (
+            item.type === 'image'
+        ) {
+
+            mediaElement =
                 document.createElement(
-                    'div'
+                    'img'
                 );
 
+            mediaElement.src =
+                objectURL;
 
-            div.className =
-                'media-item';
+            mediaElement.alt =
+                item.name ||
+                'Vault photo';
+
+            mediaElement.loading =
+                'lazy';
+        }
 
 
-            let mediaElement;
+        // VIDEO
+        else {
+
+            mediaElement =
+                document.createElement(
+                    'video'
+                );
+
+            mediaElement.src =
+                objectURL;
+
+            mediaElement.preload =
+                'metadata';
+
+            mediaElement.muted =
+                true;
+
+            mediaElement.setAttribute(
+                'playsinline',
+                'true'
+            );
+        }
 
 
-            // IMAGE
-            if (
-                item.type ===
-                'image'
+        // DELETE BUTTON
+
+        const deleteButton =
+            document.createElement(
+                'button'
+            );
+
+        deleteButton.className =
+            'delete-btn';
+
+        deleteButton.type =
+            'button';
+
+        deleteButton.innerHTML =
+            '&times;';
+
+        deleteButton.setAttribute(
+            'aria-label',
+            'Delete'
+        );
+
+
+        deleteButton.addEventListener(
+            'click',
+            async function (
+                event
             ) {
 
-                mediaElement =
-                    document.createElement(
-                        'img'
+                event.stopPropagation();
+
+                const confirmed =
+                    confirm(
+                        'Delete this file from your vault?'
                     );
 
-
-                mediaElement.src =
-                    item.url;
+                if (!confirmed) return;
 
 
-                mediaElement.alt =
-                    item.name ||
-                    'Vault photo';
+                try {
 
-
-                mediaElement.loading =
-                    'lazy';
-
-            }
-
-
-            // VIDEO
-            else {
-
-                mediaElement =
-                    document.createElement(
-                        'video'
+                    await deleteMediaFromDB(
+                        item.id
                     );
 
+                    URL.revokeObjectURL(
+                        objectURL
+                    );
 
-                mediaElement.src =
-                    item.url;
+                    showToast(
+                        'File deleted'
+                    );
 
+                    await loadMediaFiles();
 
-                mediaElement.preload =
-                    'metadata';
+                } catch (error) {
 
+                    console.error(
+                        error
+                    );
 
-                mediaElement.muted =
-                    true;
-
-
-                mediaElement.setAttribute(
-                    'playsinline',
-                    'true'
-                );
-
-            }
-
-
-            // DELETE
-            const deleteButton =
-                document.createElement(
-                    'button'
-                );
-
-
-            deleteButton.className =
-                'delete-btn';
-
-
-            deleteButton.type =
-                'button';
-
-
-            deleteButton.innerHTML =
-                '&times;';
-
-
-            deleteButton.addEventListener(
-                'click',
-                function (event) {
-
-                    event.stopPropagation();
-
-
-                    const shouldDelete =
-                        confirm(
-                            'Delete this file?'
-                        );
-
-
-                    if (
-                        shouldDelete
-                    ) {
-
-                        deleteMedia(
-                            item.id
-                        );
-
-                    }
-
+                    showToast(
+                        'Could not delete file'
+                    );
                 }
-            );
+            }
+        );
 
 
-            div.appendChild(
-                mediaElement
-            );
+        card.appendChild(
+            mediaElement
+        );
+
+        card.appendChild(
+            deleteButton
+        );
 
 
-            div.appendChild(
-                deleteButton
-            );
+        card.addEventListener(
+            'click',
+            function () {
+
+                openPreview(
+                    item
+                );
+            }
+        );
 
 
-            div.addEventListener(
-                'click',
-                function () {
-
-                    openPreview(
-                        item
-                    );
-
-                }
-            );
-
-
-            mediaGrid.appendChild(
-                div
-            );
-
-        }
-    );
-
+        mediaGrid.appendChild(
+            card
+        );
+    });
 }
 
 
-// ==========================================
-// DELETE MEDIA
-// ==========================================
-
-function deleteMedia(id) {
-
-    mediaFiles =
-        mediaFiles.filter(
-            function (item) {
-
-                return (
-                    item.id !== id
-                );
-
-            }
-        );
-
-
-    try {
-
-        localStorage.setItem(
-            'vault_media',
-            JSON.stringify(
-                mediaFiles
-            )
-        );
-
-    } catch (error) {
-
-        console.error(
-            error
-        );
-
-    }
-
-
-    renderVaultMedia();
-
-    updateStorageInfo();
-
-}
-
-
-// ==========================================
-// STORAGE INFO
-// ==========================================
+// ============================================================
+// STORAGE UI
+// ============================================================
 
 function updateStorageInfo() {
 
     const totalBytes =
-        mediaFiles.reduce(
-            function (
-                total,
-                item
-            ) {
+        calculateUsedBytes();
 
-                return (
-                    total +
-                    Number(
-                        item.size || 0
-                    )
-                );
-
-            },
-            0
-        );
-
-
-    const totalMb =
+    const totalMB =
         totalBytes /
         (1024 * 1024);
 
+    const limitMB =
+        getStorageLimitMB();
 
-    const percent =
+    const percentage =
         Math.min(
             Math.round(
                 (
-                    totalMb /
-                    STORAGE_LIMIT_MB
+                    totalMB /
+                    limitMB
                 ) * 100
             ),
             100
@@ -1782,56 +2053,68 @@ function updateStorageInfo() {
 
     if (storageUsed) {
 
-        storageUsed.textContent =
-            `${totalMb.toFixed(2)} MB used`;
+        if (totalMB >= 1024) {
 
+            storageUsed.textContent =
+                `${(
+                    totalMB / 1024
+                ).toFixed(2)} GB used`;
+
+        } else {
+
+            storageUsed.textContent =
+                `${totalMB.toFixed(2)} MB used`;
+        }
     }
 
 
     if (storagePercent) {
 
         storagePercent.textContent =
-            `${percent}%`;
-
+            `${percentage}%`;
     }
 
 
     if (progressBar) {
 
         progressBar.style.width =
-            `${percent}%`;
-
+            `${percentage}%`;
     }
 
 
     if (storageTotal) {
 
         storageTotal.textContent =
-            '1 GB total';
-
+            storage10GBActive
+                ? '10 GB total'
+                : '1 GB total';
     }
-
 }
 
 
-// ==========================================
-// PREVIEW
-// ==========================================
+// ============================================================
+// OPEN PREVIEW
+// ============================================================
 
 function openPreview(item) {
 
     if (
-        !previewContainer ||
-        !previewModal
+        !previewModal ||
+        !previewContainer
     ) {
 
         return;
-
     }
 
 
     previewContainer.innerHTML =
         '';
+
+
+    const objectURL =
+        URL.createObjectURL(
+            item.blob
+        );
 
 
     let element;
@@ -1846,10 +2129,8 @@ function openPreview(item) {
                 'img'
             );
 
-
         element.src =
-            item.url;
-
+            objectURL;
 
         element.alt =
             item.name ||
@@ -1862,29 +2143,24 @@ function openPreview(item) {
                 'video'
             );
 
-
         element.src =
-            item.url;
-
+            objectURL;
 
         element.controls =
             true;
 
-
         element.autoplay =
             true;
-
-
-        element.muted =
-            false;
-
 
         element.setAttribute(
             'playsinline',
             'true'
         );
-
     }
+
+
+    element.dataset.objectUrl =
+        objectURL;
 
 
     previewContainer.appendChild(
@@ -1895,52 +2171,62 @@ function openPreview(item) {
     previewModal.classList.remove(
         'hidden'
     );
-
 }
 
 
-// ==========================================
+// ============================================================
 // CLOSE PREVIEW
-// ==========================================
+// ============================================================
 
 function closePreviewModal() {
 
     if (!previewModal) return;
 
 
-    const video =
-        previewContainer
-            ? previewContainer.querySelector(
-                'video'
-            )
-            : null;
+    if (previewContainer) {
+
+        const media =
+            previewContainer.querySelector(
+                'img, video'
+            );
+
+        if (media) {
+
+            if (
+                media.tagName ===
+                'VIDEO'
+            ) {
+
+                media.pause();
+            }
 
 
-    if (video) {
+            const objectURL =
+                media.dataset.objectUrl;
 
-        video.pause();
+            if (objectURL) {
 
+                URL.revokeObjectURL(
+                    objectURL
+                );
+            }
+        }
+
+
+        previewContainer.innerHTML =
+            '';
     }
 
 
     previewModal.classList.add(
         'hidden'
     );
-
-
-    if (previewContainer) {
-
-        previewContainer.innerHTML =
-            '';
-
-    }
-
 }
 
 
-// ==========================================
-// PREVIEW BUTTON
-// ==========================================
+// ============================================================
+// CLOSE PREVIEW BUTTON
+// ============================================================
 
 if (closePreviewBtn) {
 
@@ -1948,13 +2234,12 @@ if (closePreviewBtn) {
         'click',
         closePreviewModal
     );
-
 }
 
 
-// ==========================================
-// PREVIEW OUTSIDE
-// ==========================================
+// ============================================================
+// PREVIEW BACKDROP
+// ============================================================
 
 if (previewModal) {
 
@@ -1968,77 +2253,15 @@ if (previewModal) {
             ) {
 
                 closePreviewModal();
-
             }
-
         }
     );
-
 }
 
 
-// ==========================================
-// OPEN PREMIUM MODAL
-// ==========================================
-
-if (
-    openUpgradeModal &&
-    upgradeModal
-) {
-
-    openUpgradeModal.addEventListener(
-        'click',
-        function () {
-
-            if (
-                isPremiumActive()
-            ) {
-
-                showToast(
-                    'Pro+ Already Active'
-                );
-
-                return;
-
-            }
-
-
-            upgradeModal.classList.remove(
-                'hidden'
-            );
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// CLOSE PREMIUM MODAL
-// ==========================================
-
-if (
-    closeModalBtn &&
-    upgradeModal
-) {
-
-    closeModalBtn.addEventListener(
-        'click',
-        function () {
-
-            upgradeModal.classList.add(
-                'hidden'
-            );
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// MODAL OUTSIDE CLICK
-// ==========================================
+// ============================================================
+// PREMIUM MODAL BACKDROP
+// ============================================================
 
 if (upgradeModal) {
 
@@ -2054,73 +2277,91 @@ if (upgradeModal) {
                 upgradeModal.classList.add(
                     'hidden'
                 );
-
             }
-
         }
     );
-
 }
 
 
-// ==========================================
-// ACTIVATE PRO
-// ==========================================
+// ============================================================
+// OPTIONAL SEPARATE 10GB ACTIVATION
+// ============================================================
 //
 // IMPORTANT:
 //
-// Pro active ஆகும்
-// BUT
-// 10GB active ஆகாது
+// Do NOT call this when Premium activates.
 //
-// ==========================================
+// Call only after a separate 10GB storage purchase is verified.
+//
+// Example:
+//
+// window.storage10GBPaymentVerified('valid-token')
+//
+// ============================================================
 
-if (confirmSubscribeBtn) {
+window.storage10GBPaymentVerified =
+    function (
+        verificationToken
+    ) {
 
-    confirmSubscribeBtn.addEventListener(
-        'click',
-        function () {
-
-
-            localStorage.setItem(
-                'premium_active',
-                'true'
-            );
-
-
-            premiumActive = true;
-
-
-            if (upgradeModal) {
-
-                upgradeModal.classList.add(
-                    'hidden'
-                );
-
-            }
-
-
-            updatePremiumUI();
-
+        if (
+            !verificationToken
+        ) {
 
             showToast(
-                'Pro+ Activated'
+                '10GB verification failed'
             );
 
+            return;
         }
-    );
 
+
+        localStorage.setItem(
+            'storage_10gb_active',
+            'true'
+        );
+
+        storage10GBActive = true;
+
+        updateStorageInfo();
+
+        showToast(
+            '10GB Storage Activated'
+        );
+    };
+
+
+// ============================================================
+// APP START
+// ============================================================
+
+async function initializeApp() {
+
+    updateDisplay();
+
+    updatePremiumUI();
+
+    updateStorageInfo();
+
+
+    try {
+
+        await openVaultDatabase();
+
+        await loadMediaFiles();
+
+    } catch (error) {
+
+        console.error(
+            'Database startup error:',
+            error
+        );
+
+        showToast(
+            'Local storage database unavailable'
+        );
+    }
 }
 
 
-// ==========================================
-// INITIAL SETUP
-// ==========================================
-
-updateDisplay();
-
-renderVaultMedia();
-
-updateStorageInfo();
-
-updatePremiumUI();
+initializeApp();
